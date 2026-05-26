@@ -209,13 +209,14 @@ function extractAddressParts(
   let country: string | null = null;
 
   for (const c of components) {
-    if (c.types.includes("sublocality_level_1") || c.types.includes("neighborhood")) {
+    const types = c.types ?? [];
+    if (types.includes("sublocality_level_1") || types.includes("neighborhood")) {
       district ??= c.longText;
     }
-    if (c.types.includes("locality") || c.types.includes("postal_town")) {
+    if (types.includes("locality") || types.includes("postal_town")) {
       city ??= c.longText;
     }
-    if (c.types.includes("country")) {
+    if (types.includes("country")) {
       country ??= c.longText;
     }
   }
