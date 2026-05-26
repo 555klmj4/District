@@ -2,7 +2,7 @@ import "server-only";
 
 const PLACES_API_BASE = "https://places.googleapis.com/v1";
 
-const FIELD_MASK = [
+const FIELDS = [
   "id",
   "displayName",
   "formattedAddress",
@@ -17,7 +17,11 @@ const FIELD_MASK = [
   "nationalPhoneNumber",
   "shortFormattedAddress",
   "addressComponents",
-].join(",");
+];
+
+// Single-place endpoint uses bare field names; text search requires "places." prefix
+const FIELD_MASK = FIELDS.join(",");
+const TEXT_SEARCH_FIELD_MASK = FIELDS.map((f) => `places.${f}`).join(",");
 
 function getApiKey(): string {
   const key = process.env.GOOGLE_PLACES_API_KEY;
@@ -25,10 +29,10 @@ function getApiKey(): string {
   return key;
 }
 
-function headers() {
+function headers(fieldMask = FIELD_MASK) {
   return {
     "X-Goog-Api-Key": getApiKey(),
-    "X-Goog-FieldMask": FIELD_MASK,
+    "X-Goog-FieldMask": fieldMask,
     "Content-Type": "application/json",
   };
 }
@@ -97,7 +101,7 @@ export async function fetchByTextSearch(
 
   const res = await fetch(`${PLACES_API_BASE}/places:searchText`, {
     method: "POST",
-    headers: headers(),
+    headers: headers(TEXT_SEARCH_FIELD_MASK),
     body: JSON.stringify(body),
     next: { revalidate: 0 },
   });
