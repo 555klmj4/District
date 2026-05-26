@@ -64,7 +64,7 @@ CREATE TABLE "restaurants" (
 	"district" varchar(256),
 	"city" varchar(256),
 	"country" varchar(128),
-	"location" "geography(Point, 4326)",
+	"location" geography(Point, 4326),
 	"lat" numeric(10, 7),
 	"lng" numeric(10, 7),
 	"phone" varchar(64),
