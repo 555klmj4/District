@@ -100,8 +100,8 @@ function extractPlaceIdFromData(url: string): string | null {
   const dataMatch = url.match(/!1s([^!]+)/);
   if (dataMatch) {
     const candidate = decodeURIComponent(dataMatch[1]!);
-    // Valid place IDs start with "ChIJ" or similar
-    if (candidate.startsWith("Ch") || candidate.startsWith("0x")) {
+    // Only accept Places API v1 IDs (ChIJ... format). 0x... are CIDs which the API rejects.
+    if (candidate.startsWith("Ch")) {
       return candidate;
     }
   }
