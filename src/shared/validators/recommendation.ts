@@ -6,6 +6,7 @@ export const RecommendationInput = z.object({
   lng: z.number().min(-180).max(180).optional(),
   max_km: z.number().min(0.1).max(50).optional(),
   open_now: z.boolean().optional(),
+  timezone: z.string().optional(),
   cuisine: z.string().optional(),
   limit: z.number().int().min(1).max(10).default(5),
 });

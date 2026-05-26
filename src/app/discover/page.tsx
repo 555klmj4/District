@@ -3,7 +3,7 @@ import { DiscoverFeed } from "@/components/discover/DiscoverFeed";
 
 export default function DiscoverPage() {
   return (
-    <PageShell title="District">
+    <PageShell title="🍜 District">
       <DiscoverFeed />
     </PageShell>
   );

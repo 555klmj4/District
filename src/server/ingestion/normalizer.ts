@@ -69,6 +69,7 @@ export interface NormalizedPlace {
   cuisine_tags: string[];
   hours: WeeklyHours | null;
   rating_google: string | null;
+  rating_openrice: string | null;
   rating_count_google: number | null;
   rating_aggregate: string | null;
   google_place_id: string;
@@ -111,6 +112,7 @@ export function normalizePlace(place: PlaceResult): NormalizedPlace {
     cuisine_tags: cuisineTags,
     hours: normalizeHours(place.regularOpeningHours ?? null),
     rating_google: rating,
+    rating_openrice: null,
     rating_count_google: place.userRatingCount ?? null,
     rating_aggregate: aggregate,
     google_place_id: place.id,

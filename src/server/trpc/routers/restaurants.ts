@@ -15,6 +15,7 @@ export const restaurantsRouter = router({
       search,
       cuisine,
       open_now,
+      timezone,
       lat,
       lng,
       max_km,
@@ -121,7 +122,7 @@ export const restaurantsRouter = router({
       ...restaurant,
       is_bookmarked,
       distance_km: distance_m != null ? distance_m / 1000 : undefined,
-      is_open_now: restaurant.hours ? isOpenNow(restaurant.hours) : undefined,
+      is_open_now: restaurant.hours ? isOpenNow(restaurant.hours, timezone) : undefined,
     }));
 
     if (open_now) {

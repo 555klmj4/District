@@ -29,6 +29,7 @@ export function DiscoverFeed() {
       search: filters.search || undefined,
       cuisine: filters.cuisine || undefined,
       open_now: filters.open_now || undefined,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       sort: filters.sort,
       lat: location.lat ?? undefined,
       lng: location.lng ?? undefined,

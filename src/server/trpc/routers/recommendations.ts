@@ -85,7 +85,7 @@ export const recommendationsRouter = router({
         return {
           ...restaurant,
           distance_km: distKm ?? undefined,
-          is_open_now: restaurant.hours ? isOpenNow(restaurant.hours) : undefined,
+          is_open_now: restaurant.hours ? isOpenNow(restaurant.hours, input.timezone) : undefined,
           bookmark_created_at: bookmark.created_at,
           personal_rating: bookmark.personal_rating,
         };

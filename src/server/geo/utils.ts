@@ -21,18 +21,48 @@ export function haversineKm(
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-export function isOpenNow(hours: WeeklyHours, now: Date = new Date()): boolean {
-  const dayKey = DAY_NAMES[now.getDay()] as DayKey;
+function getLocalTime(timezone?: string): { dayKey: DayKey; minutes: number } {
+  const now = new Date();
+  if (timezone) {
+    try {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: timezone,
+        weekday: "short",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: false,
+      }).formatToParts(now);
+      const weekdayMap: Record<string, number> = {
+        Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6,
+      };
+      const weekdayStr = parts.find((p) => p.type === "weekday")?.value ?? "";
+      const hour = parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
+      const minute = parseInt(parts.find((p) => p.type === "minute")?.value ?? "0", 10);
+      const dayIndex = weekdayMap[weekdayStr] ?? now.getDay();
+      return {
+        dayKey: DAY_NAMES[dayIndex] as DayKey,
+        minutes: (hour === 24 ? 0 : hour) * 60 + minute,
+      };
+    } catch {
+      // Fall through to UTC
+    }
+  }
+  return {
+    dayKey: DAY_NAMES[now.getDay()] as DayKey,
+    minutes: now.getHours() * 60 + now.getMinutes(),
+  };
+}
+
+export function isOpenNow(hours: WeeklyHours, timezone?: string): boolean {
+  const { dayKey, minutes: currentMinutes } = getLocalTime(timezone);
   const dayHours = hours[dayKey];
 
   if (!dayHours || dayHours.closed) return false;
 
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
   const openMinutes = parseTime(dayHours.open);
   const closeMinutes = parseTime(dayHours.close);
 
   if (closeMinutes < openMinutes) {
-    // Crosses midnight (e.g. 22:00 – 02:00)
     return currentMinutes >= openMinutes || currentMinutes < closeMinutes;
   }
 
@@ -46,24 +76,23 @@ function parseTime(time: string): number {
 
 export function formatOpenStatus(
   hours: WeeklyHours | null,
-  now: Date = new Date()
+  timezone?: string
 ): { open: boolean; label: string } {
   if (!hours) return { open: false, label: "Hours unknown" };
 
-  const dayKey = DAY_NAMES[now.getDay()] as DayKey;
+  const { dayKey, minutes: nowMin } = getLocalTime(timezone);
   const dayHours = hours[dayKey];
 
   if (!dayHours || dayHours.closed) {
     return { open: false, label: "Closed today" };
   }
 
-  const open = isOpenNow(hours, now);
+  const open = isOpenNow(hours, timezone);
   if (open) {
     return { open: true, label: `Open until ${formatHour(dayHours.close)}` };
   }
 
   const openMin = parseTime(dayHours.open);
-  const nowMin = now.getHours() * 60 + now.getMinutes();
   if (nowMin < openMin) {
     return { open: false, label: `Opens at ${formatHour(dayHours.open)}` };
   }

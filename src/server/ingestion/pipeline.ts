@@ -6,6 +6,7 @@ import { parseAndResolveUrl } from "./urlParser";
 import { fetchByPlaceId, fetchByTextSearch } from "./googlePlaces";
 import { normalizePlace, computeRatingAggregate } from "./normalizer";
 import { findDuplicate } from "./deduplication";
+import { fetchOpenRiceData } from "./openrice";
 import type { RestaurantRow } from "@/server/db/schema";
 
 export interface ImportResult {
@@ -45,6 +46,24 @@ export async function importUrl(opts: {
 
   // 3. Normalize
   const normalized = normalizePlace(placeData);
+
+  // 3b. If imported from OpenRice, scrape its rating
+  let openriceRating: number | null = null;
+  let openriceHasBooking = false;
+  if (parsed.platform === "openrice") {
+    const or = await fetchOpenRiceData(parsed.originalUrl);
+    openriceRating = or.rating;
+    openriceHasBooking = or.hasBooking;
+    if (openriceRating != null) {
+      normalized.rating_openrice = openriceRating.toFixed(1);
+      normalized.rating_aggregate = computeRatingAggregate({
+        rating_google: normalized.rating_google,
+        rating_count_google: normalized.rating_count_google,
+        rating_openrice: normalized.rating_openrice,
+        rating_yelp: null,
+      });
+    }
+  }
 
   // 4. Deduplicate
   const duplicate = await findDuplicate(db, normalized, userId);
@@ -103,6 +122,7 @@ export async function importUrl(opts: {
     cuisine_tags: normalized.cuisine_tags,
     hours: normalized.hours,
     rating_google: normalized.rating_google,
+    rating_openrice: normalized.rating_openrice,
     rating_count_google: normalized.rating_count_google,
     rating_aggregate: normalized.rating_aggregate,
     google_place_id: normalized.google_place_id,
@@ -125,12 +145,17 @@ export async function importUrl(opts: {
   }
 
   // 6. Insert source record
+  const sourceRawData: Record<string, unknown> =
+    parsed.platform === "openrice"
+      ? { rating: openriceRating, has_booking: openriceHasBooking }
+      : (placeData as unknown as Record<string, unknown>);
+
   await db.insert(restaurantSources).values({
     restaurant_id: restaurant!.id,
     platform: parsed.platform,
     external_id: parsed.placeId ?? normalized.google_place_id,
     url: parsed.originalUrl,
-    raw_data: placeData as unknown as Record<string, unknown>,
+    raw_data: sourceRawData,
     fetched_at: new Date(),
   });
 

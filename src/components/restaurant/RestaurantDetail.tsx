@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
-import { ArrowLeft, Phone, Globe, Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, Phone, Globe, Clock, CalendarCheck, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { RatingBadge } from "./RatingBadge";
@@ -20,6 +19,13 @@ const DAY_LABELS = {
   fri: "Friday",
   sat: "Saturday",
   sun: "Sunday",
+};
+
+const PLATFORM_LABELS: Record<string, string> = {
+  google: "Google Maps",
+  openrice: "OpenRice",
+  yelp: "Yelp",
+  manual: "Manual",
 };
 
 interface RestaurantDetailProps {
@@ -53,6 +59,15 @@ export function RestaurantDetail({ id }: RestaurantDetailProps) {
 
   const hours = restaurant.hours as WeeklyHours | null;
   const sourcePlatforms = restaurant.sources ?? [];
+
+  // Booking detection from source raw_data
+  const googleSource = sourcePlatforms.find((s) => s.platform === "google");
+  const openriceSource = sourcePlatforms.find((s) => s.platform === "openrice");
+  const googleReservable = (googleSource?.raw_data as Record<string, unknown> | null)?.reservable === true;
+  const openriceBookable = (openriceSource?.raw_data as Record<string, unknown> | null)?.has_booking === true;
+
+  // OpenRice search URL fallback
+  const openriceSearchUrl = `https://www.openrice.com/en/hongkong/restaurants?what=${encodeURIComponent(restaurant.name)}`;
 
   return (
     <div className="pb-8">
@@ -109,17 +124,44 @@ export function RestaurantDetail({ id }: RestaurantDetailProps) {
           yelp={restaurant.rating_yelp}
           googleCount={restaurant.rating_count_google}
         />
+
+        {/* Booking badges */}
+        {(googleReservable || openriceBookable) && (
+          <div className="flex flex-wrap gap-2">
+            {googleReservable && (
+              <a
+                href={`https://www.google.com/maps/place/?q=place_id:${restaurant.google_place_id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-full hover:bg-blue-100 transition-colors"
+              >
+                <CalendarCheck className="w-3 h-3" />
+                Reserve via Google
+              </a>
+            )}
+            {openriceBookable && openriceSource && (
+              <a
+                href={openriceSource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1.5 rounded-full hover:bg-orange-100 transition-colors"
+              >
+                <CalendarCheck className="w-3 h-3" />
+                Book via OpenRice
+              </a>
+            )}
+          </div>
+        )}
       </div>
 
       <Separator />
 
-      {/* Info */}
+      {/* ℹ️ Info */}
       <div className="px-4 py-4 space-y-3">
+        <p className="text-xs text-muted-foreground uppercase tracking-wider">ℹ️ Info</p>
         {restaurant.address && (
           <div className="text-sm">
-            <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">
-              Address
-            </p>
+            <p className="text-muted-foreground text-xs mb-1">Address</p>
             <p className="text-foreground">{restaurant.address}</p>
           </div>
         )}
@@ -145,14 +187,14 @@ export function RestaurantDetail({ id }: RestaurantDetailProps) {
         )}
       </div>
 
-      {/* Hours */}
+      {/* 🕐 Hours */}
       {hours && (
         <>
           <Separator />
           <div className="px-4 py-4">
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" />
-              Hours
+              🕐 Hours
             </p>
             <div className="space-y-1.5">
               {(Object.keys(DAY_LABELS) as Array<keyof typeof DAY_LABELS>).map((key) => {
@@ -181,30 +223,38 @@ export function RestaurantDetail({ id }: RestaurantDetailProps) {
         </>
       )}
 
-      {/* Sources */}
-      {sourcePlatforms.length > 0 && (
-        <>
-          <Separator />
-          <div className="px-4 py-4">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
-              Sources
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {sourcePlatforms.map((s) => (
-                <a
-                  key={s.id}
-                  href={s.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs bg-secondary text-secondary-foreground px-3 py-1 rounded-full hover:bg-primary/10 hover:text-primary transition-colors capitalize"
-                >
-                  {s.platform}
-                </a>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
+      {/* 🔗 Links */}
+      <Separator />
+      <div className="px-4 py-4">
+        <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">🔗 Links</p>
+        <div className="flex flex-wrap gap-2">
+          {/* Existing sources */}
+          {sourcePlatforms.map((s) => (
+            <a
+              key={s.id}
+              href={s.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs bg-secondary text-secondary-foreground px-3 py-1.5 rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
+            >
+              <ExternalLink className="w-3 h-3" />
+              {PLATFORM_LABELS[s.platform] ?? s.platform}
+            </a>
+          ))}
+          {/* OpenRice search link if no OpenRice source yet */}
+          {!openriceSource && (
+            <a
+              href={openriceSearchUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1.5 rounded-full hover:bg-orange-100 transition-colors"
+            >
+              <ExternalLink className="w-3 h-3" />
+              Search OpenRice
+            </a>
+          )}
+        </div>
+      </div>
 
       {/* Map button */}
       <div className="px-4 pt-2">

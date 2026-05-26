@@ -44,6 +44,7 @@ export function RecommendationChat() {
       lat: location.lat ?? undefined,
       lng: location.lng ?? undefined,
       open_now: openNow,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       limit: 5,
     });
   };

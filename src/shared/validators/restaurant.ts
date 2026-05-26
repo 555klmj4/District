@@ -4,6 +4,7 @@ export const RestaurantListInput = z.object({
   search: z.string().optional(),
   cuisine: z.string().optional(),
   open_now: z.boolean().optional(),
+  timezone: z.string().optional(),
   lat: z.number().optional(),
   lng: z.number().optional(),
   max_km: z.number().min(0.1).max(50).optional(),

@@ -3,7 +3,7 @@ import { RecommendationChat } from "@/components/recommendation/RecommendationCh
 
 export default function RecommendPage() {
   return (
-    <PageShell title="AI Recommendations">
+    <PageShell title="✨ AI Recommendations">
       <div className="pt-4">
         <RecommendationChat />
       </div>

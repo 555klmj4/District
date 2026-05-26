@@ -4,8 +4,8 @@
   "description": "Your personal restaurant intelligence system",
   "start_url": "/discover",
   "display": "standalone",
-  "background_color": "#141414",
-  "theme_color": "#141414",
+  "background_color": "#f7f3ef",
+  "theme_color": "#C8723A",
   "icons": [
     {
       "src": "/icon-192.png",

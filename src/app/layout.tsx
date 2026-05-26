@@ -13,6 +13,14 @@ export const metadata: Metadata = {
   title: "District",
   description: "Your personal restaurant intelligence system",
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "District",
+  },
+  icons: {
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {

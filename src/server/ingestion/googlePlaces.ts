@@ -17,6 +17,8 @@ const FIELDS = [
   "nationalPhoneNumber",
   "shortFormattedAddress",
   "addressComponents",
+  "reservable",
+  "googleMapsUri",
 ];
 
 // Single-place endpoint uses bare field names; text search requires "places." prefix
@@ -57,6 +59,8 @@ export interface PlaceResult {
   types?: string[];
   websiteUri?: string;
   nationalPhoneNumber?: string;
+  reservable?: boolean;
+  googleMapsUri?: string;
   addressComponents?: Array<{
     longText: string;
     shortText: string;
