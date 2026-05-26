@@ -2,28 +2,28 @@
 @import "tw-animate-css";
 
 :root {
-  --background: oklch(0.08 0.005 260);
-  --foreground: oklch(0.96 0.005 60);
-  --card: oklch(0.12 0.007 260);
-  --card-foreground: oklch(0.96 0.005 60);
-  --popover: oklch(0.12 0.007 260);
-  --popover-foreground: oklch(0.96 0.005 60);
-  --primary: oklch(0.82 0.12 60);       /* warm amber */
-  --primary-foreground: oklch(0.12 0.02 60);
-  --secondary: oklch(0.18 0.01 260);
-  --secondary-foreground: oklch(0.85 0.01 60);
-  --muted: oklch(0.16 0.007 260);
-  --muted-foreground: oklch(0.55 0.01 60);
-  --accent: oklch(0.22 0.02 60);
-  --accent-foreground: oklch(0.95 0.01 60);
-  --destructive: oklch(0.60 0.22 25);
-  --destructive-foreground: oklch(0.98 0.005 60);
-  --border: oklch(0.22 0.01 260);
-  --input: oklch(0.20 0.01 260);
-  --ring: oklch(0.82 0.12 60);
-  --radius: 0.625rem;
-  --open-green: oklch(0.72 0.18 142);
-  --closed-red: oklch(0.60 0.18 25);
+  --background: oklch(0.97 0.005 80);
+  --foreground: oklch(0.13 0.01 60);
+  --card: oklch(1.0 0 0);
+  --card-foreground: oklch(0.13 0.01 60);
+  --popover: oklch(1.0 0 0);
+  --popover-foreground: oklch(0.13 0.01 60);
+  --primary: oklch(0.58 0.17 48);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.94 0.006 80);
+  --secondary-foreground: oklch(0.28 0.01 60);
+  --muted: oklch(0.94 0.004 80);
+  --muted-foreground: oklch(0.52 0.01 60);
+  --accent: oklch(0.95 0.012 60);
+  --accent-foreground: oklch(0.20 0.02 60);
+  --destructive: oklch(0.56 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.89 0.006 80);
+  --input: oklch(0.92 0.004 80);
+  --ring: oklch(0.58 0.17 48);
+  --radius: 0.75rem;
+  --open-green: oklch(0.50 0.16 142);
+  --closed-red: oklch(0.56 0.22 25);
 }
 
 @theme inline {
@@ -57,7 +57,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* iOS safe area bottom padding utility */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom);
 }

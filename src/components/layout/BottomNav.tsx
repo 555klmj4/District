@@ -14,7 +14,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-50 bg-card/95 backdrop-blur border-t border-border pb-safe">
+    <nav className="fixed bottom-0 inset-x-0 z-50 bg-card/95 backdrop-blur border-t border-border shadow-[0_-1px_4px_oklch(0_0_0/0.06)] pb-safe">
       <div className="flex items-stretch h-16 max-w-lg mx-auto">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + "/");
@@ -23,17 +23,22 @@ export function BottomNav() {
               key={href}
               href={href}
               className={cn(
-                "flex-1 flex flex-col items-center justify-center gap-1 text-xs transition-colors",
-                active
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                "flex-1 flex flex-col items-center justify-center gap-0.5 text-xs transition-colors",
+                active ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Icon
-                className={cn("w-5 h-5", active && "fill-primary/20")}
-                strokeWidth={active ? 2.5 : 1.75}
-              />
-              <span className="font-medium">{label}</span>
+              <div
+                className={cn(
+                  "flex items-center justify-center w-11 h-7 rounded-full transition-all",
+                  active ? "bg-primary/10" : ""
+                )}
+              >
+                <Icon
+                  className={cn("w-5 h-5 transition-all", active && "fill-primary/20")}
+                  strokeWidth={active ? 2.5 : 1.75}
+                />
+              </div>
+              <span className={cn("font-medium", active && "font-semibold")}>{label}</span>
             </Link>
           );
         })}

@@ -1,9 +1,10 @@
 "use client";
 import { useState } from "react";
-import { Sparkles, Loader2, Send } from "lucide-react";
+import { Sparkles, Loader2, Send, Check, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { RecommendationCard } from "./RecommendationCard";
 import { trpc } from "@/client/trpc";
 import { useLocation } from "@/client/hooks/useLocation";
@@ -77,19 +78,28 @@ export function RecommendationChat() {
         </div>
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
           <button
-            className={`flex items-center gap-1.5 transition-colors ${openNow ? "text-[var(--open-green)]" : "hover:text-foreground"}`}
+            className={cn(
+              "flex items-center gap-1.5 transition-colors",
+              openNow ? "text-[var(--open-green)]" : "hover:text-foreground"
+            )}
             onClick={() => setOpenNow((v) => !v)}
           >
             <span
-              className={`w-4 h-4 rounded border flex items-center justify-center text-xs ${openNow ? "bg-[var(--open-green)] border-[var(--open-green)] text-background" : "border-border"}`}
+              className={cn(
+                "w-4 h-4 rounded border flex items-center justify-center transition-all",
+                openNow
+                  ? "bg-[var(--open-green)] border-[var(--open-green)]"
+                  : "border-border bg-card"
+              )}
             >
-              {openNow ? "✓" : ""}
+              {openNow && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
             </span>
             Open now only
           </button>
           {location.lat && (
-            <span className="text-xs text-muted-foreground/60">
-              📍 Location active
+            <span className="inline-flex items-center gap-1 text-xs text-primary/70">
+              <MapPin className="w-3 h-3" />
+              Location active
             </span>
           )}
         </div>

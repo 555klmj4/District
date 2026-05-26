@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { UtensilsCrossed } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RestaurantCard } from "@/components/restaurant/RestaurantCard";
 import { FilterBar, type FilterState } from "./FilterBar";
@@ -85,8 +86,10 @@ export function DiscoverFeed() {
 function EmptyState() {
   return (
     <div className="text-center py-16 text-muted-foreground">
-      <p className="text-4xl mb-3">🍜</p>
-      <p className="font-medium">No restaurants yet</p>
+      <div className="w-14 h-14 rounded-full bg-primary/8 flex items-center justify-center mx-auto mb-4">
+        <UtensilsCrossed className="w-7 h-7 text-primary/60" />
+      </div>
+      <p className="font-medium text-foreground">No restaurants yet</p>
       <p className="text-sm mt-1">
         Paste a Google Maps or Yelp link to get started.
       </p>

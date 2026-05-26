@@ -25,15 +25,17 @@ export function StatusIndicator({
   return (
     <span
       className={cn(
-        "text-xs font-medium flex items-center gap-1",
+        "text-xs font-medium flex items-center gap-1.5",
         isOpenNow ? "text-[var(--open-green)]" : "text-muted-foreground",
         className
       )}
     >
       <span
         className={cn(
-          "w-1.5 h-1.5 rounded-full",
-          isOpenNow ? "bg-[var(--open-green)]" : "bg-muted-foreground"
+          "w-1.5 h-1.5 rounded-full shrink-0",
+          isOpenNow
+            ? "bg-[var(--open-green)] animate-pulse"
+            : "bg-muted-foreground"
         )}
       />
       {label ?? (isOpenNow ? "Open now" : "Closed")}

@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import { UtensilsCrossed, MapPin, Navigation } from "lucide-react";
 import { RatingBadge } from "@/components/restaurant/RatingBadge";
 import { StatusIndicator } from "@/components/restaurant/StatusIndicator";
 import { MapLaunchButton } from "@/components/restaurant/MapLaunchButton";
@@ -26,28 +26,33 @@ export function RecommendationCard({
   return (
     <div
       className={cn(
-        "bg-card rounded-xl border border-border p-4 space-y-3",
+        "bg-card rounded-xl border border-border shadow-sm p-4 space-y-3 hover:shadow-md hover:border-primary/20 transition-all",
         className
       )}
     >
       {/* Rank + name */}
       <div className="flex items-start gap-3">
-        <span className="text-2xl font-bold text-muted-foreground/40 leading-none mt-0.5 w-7 shrink-0">
-          {rank}
-        </span>
+        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+          <span className="text-xs font-bold text-primary-foreground">{rank}</span>
+        </div>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-foreground leading-snug">{r.name}</p>
           <div className="flex flex-wrap items-center gap-1.5 mt-1">
             {r.cuisine_primary && (
-              <Badge variant="secondary" className="text-xs py-0 px-2">
+              <span className="inline-flex items-center gap-1 text-xs font-medium bg-primary/8 text-primary px-2 py-0.5 rounded-full">
+                <UtensilsCrossed className="w-3 h-3" />
                 {r.cuisine_primary}
-              </Badge>
+              </span>
             )}
             {r.district && (
-              <span className="text-xs text-muted-foreground">{r.district}</span>
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                <MapPin className="w-3 h-3" />
+                {r.district}
+              </span>
             )}
             {r.distance_km != null && (
-              <span className="text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                <Navigation className="w-3 h-3" />
                 {r.distance_km < 1
                   ? `${Math.round(r.distance_km * 1000)}m`
                   : `${r.distance_km.toFixed(1)}km`}
@@ -55,7 +60,7 @@ export function RecommendationCard({
             )}
           </div>
         </div>
-        <span className="text-xs text-muted-foreground bg-muted rounded-md px-2 py-0.5 font-mono shrink-0">
+        <span className="text-xs font-semibold bg-primary/10 text-primary rounded-full px-2.5 py-0.5 shrink-0">
           {(candidate.score * 100).toFixed(0)}%
         </span>
       </div>

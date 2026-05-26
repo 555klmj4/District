@@ -1,8 +1,7 @@
 "use client";
 import { useState } from "react";
-import { SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -36,12 +35,15 @@ export function FilterBar({ filters, onChange, hasLocation }: FilterBarProps) {
     <div className="space-y-3 px-4 py-3 border-b border-border">
       {/* Search + filter toggle */}
       <div className="flex gap-2">
-        <Input
-          placeholder="Search restaurants, cuisines…"
-          className="flex-1 h-9 text-sm"
-          value={filters.search}
-          onChange={(e) => onChange({ ...filters, search: e.target.value })}
-        />
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Search restaurants, cuisines…"
+            className="h-9 text-sm pl-8"
+            value={filters.search}
+            onChange={(e) => onChange({ ...filters, search: e.target.value })}
+          />
+        </div>
         <Button
           variant={hasActiveFilters ? "default" : "secondary"}
           size="sm"
@@ -51,9 +53,9 @@ export function FilterBar({ filters, onChange, hasLocation }: FilterBarProps) {
           <SlidersHorizontal className="w-4 h-4" />
           Filter
           {hasActiveFilters && (
-            <Badge className="ml-1 h-4 w-4 p-0 text-[10px] flex items-center justify-center">
-              !
-            </Badge>
+            <span className="ml-0.5 w-4 h-4 rounded-full bg-primary-foreground/20 text-[10px] font-bold flex items-center justify-center">
+              ·
+            </span>
           )}
         </Button>
       </div>
@@ -62,17 +64,17 @@ export function FilterBar({ filters, onChange, hasLocation }: FilterBarProps) {
       {showFilters && (
         <div className="space-y-3">
           {/* Sort */}
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-1.5 flex-wrap">
             {SORT_OPTIONS.map((opt) => {
               if (opt.value === "distance" && !hasLocation) return null;
               return (
                 <button
                   key={opt.value}
                   className={cn(
-                    "px-3 py-1 rounded-full text-xs font-medium border transition-colors",
+                    "px-3 py-1 rounded-full text-xs font-medium border transition-all",
                     filters.sort === opt.value
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
+                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                      : "bg-card border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 hover:shadow-sm"
                   )}
                   onClick={() => onChange({ ...filters, sort: opt.value })}
                 >
@@ -83,13 +85,13 @@ export function FilterBar({ filters, onChange, hasLocation }: FilterBarProps) {
           </div>
 
           {/* Open now + cuisine */}
-          <div className="flex gap-2 flex-wrap items-center">
+          <div className="flex gap-1.5 flex-wrap items-center">
             <button
               className={cn(
-                "px-3 py-1 rounded-full text-xs font-medium border transition-colors",
+                "px-3 py-1 rounded-full text-xs font-medium border transition-all",
                 filters.open_now
-                  ? "bg-[var(--open-green)] text-background border-[var(--open-green)]"
-                  : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
+                  ? "bg-[var(--open-green)] text-white border-[var(--open-green)] shadow-sm"
+                  : "bg-card border-border text-muted-foreground hover:text-foreground hover:border-foreground/20"
               )}
               onClick={() => onChange({ ...filters, open_now: !filters.open_now })}
             >
@@ -103,7 +105,7 @@ export function FilterBar({ filters, onChange, hasLocation }: FilterBarProps) {
             />
             {hasActiveFilters && (
               <button
-                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
                 onClick={() =>
                   onChange({ search: "", cuisine: "", open_now: false, sort: "newest" })
                 }

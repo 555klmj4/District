@@ -31,10 +31,10 @@ export function BookmarkList() {
           <button
             key={t.value}
             className={cn(
-              "px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
+              "px-4 py-1.5 rounded-full text-sm font-medium transition-all",
               tab === t.value
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
             )}
             onClick={() => setTab(t.value)}
           >

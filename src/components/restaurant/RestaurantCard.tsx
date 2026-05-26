@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
+import { UtensilsCrossed, MapPin, Navigation } from "lucide-react";
 import { RatingBadge } from "./RatingBadge";
 import { StatusIndicator } from "./StatusIndicator";
 import { MapLaunchButton } from "./MapLaunchButton";
@@ -48,7 +48,7 @@ export function RestaurantCard({
   return (
     <div
       className={cn(
-        "bg-card rounded-xl border border-border p-4 flex flex-col gap-3 hover:border-primary/30 transition-colors",
+        "bg-card rounded-xl border border-border shadow-sm p-4 flex flex-col gap-3 hover:shadow-md hover:border-primary/20 transition-all",
         className
       )}
     >
@@ -61,17 +61,21 @@ export function RestaurantCard({
           >
             {name}
           </Link>
-          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
             {cuisine_primary && (
-              <Badge variant="secondary" className="text-xs py-0 px-2">
+              <span className="inline-flex items-center gap-1 text-xs font-medium bg-primary/8 text-primary px-2 py-0.5 rounded-full">
+                <UtensilsCrossed className="w-3 h-3" />
                 {cuisine_primary}
-              </Badge>
+              </span>
             )}
             {district && (
-              <span className="text-xs text-muted-foreground">{district}</span>
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                <MapPin className="w-3 h-3" />
+                {district}
+              </span>
             )}
             {price_level && (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs font-medium text-muted-foreground">
                 {PRICE_LABELS[price_level]}
               </span>
             )}
@@ -93,7 +97,8 @@ export function RestaurantCard({
         />
         <div className="flex items-center gap-3">
           {distance_km != null && (
-            <span className="text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              <Navigation className="w-3 h-3" />
               {distance_km < 1
                 ? `${Math.round(distance_km * 1000)}m`
                 : `${distance_km.toFixed(1)}km`}

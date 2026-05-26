@@ -28,9 +28,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${geist.variable} h-full antialiased`}>
-      <body className="min-h-full bg-neutral-950 text-neutral-50 font-sans">
+      <body className="min-h-full bg-background text-foreground font-sans">
         <TRPCProvider>{children}</TRPCProvider>
-        <Toaster theme="dark" richColors position="top-center" />
+        <Toaster theme="light" richColors position="top-center" />
       </body>
     </html>
   );
