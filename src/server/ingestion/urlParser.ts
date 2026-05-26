@@ -19,7 +19,7 @@ export async function parseAndResolveUrl(rawUrl: string): Promise<ParsedUrl> {
   ) {
     try {
       const res = await fetch(rawUrl, {
-        method: "HEAD",
+        method: "GET",
         redirect: "follow",
         signal: AbortSignal.timeout(5000),
       });
@@ -44,7 +44,11 @@ function tryParseUrl(url: string): Omit<ParsedUrl, "originalUrl"> {
   const { hostname, pathname, searchParams } = parsedUrl;
 
   // ── Google Maps ────────────────────────────────────────────────────────────
-  if (hostname.includes("google.com/maps") || hostname === "maps.google.com" || hostname.includes("maps.app.goo.gl")) {
+  if (
+    hostname === "maps.google.com" ||
+    hostname.includes("maps.app.goo.gl") ||
+    ((hostname === "www.google.com" || hostname === "google.com") && pathname.startsWith("/maps"))
+  ) {
     // Try to extract place_id from URL params
     const placeId = searchParams.get("place_id") ?? extractPlaceIdFromData(url);
 
