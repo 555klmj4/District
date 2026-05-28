@@ -139,7 +139,7 @@ export const restaurantsRouter = router({
   }),
 
   getById: publicProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.string().uuid(), timezone: z.string().optional() }))
     .query(async ({ ctx, input }) => {
       const { userId, db } = ctx;
 
@@ -171,7 +171,7 @@ export const restaurantsRouter = router({
       return {
         ...restaurant,
         is_bookmarked,
-        is_open_now: restaurant.hours ? isOpenNow(restaurant.hours) : undefined,
+        is_open_now: restaurant.hours ? isOpenNow(restaurant.hours, input.timezone) : undefined,
         sources,
       };
     }),

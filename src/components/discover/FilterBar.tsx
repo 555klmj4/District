@@ -4,13 +4,7 @@ import { SlidersHorizontal, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-
-const SORT_OPTIONS = [
-  { value: "newest" as const, label: "Recent" },
-  { value: "rating" as const, label: "Top rated" },
-  { value: "distance" as const, label: "Nearest" },
-  { value: "name" as const, label: "Name" },
-];
+import { useTranslation } from "@/lib/i18n";
 
 interface FilterState {
   search: string;
@@ -27,6 +21,14 @@ interface FilterBarProps {
 
 export function FilterBar({ filters, onChange, hasLocation }: FilterBarProps) {
   const [showFilters, setShowFilters] = useState(false);
+  const { t } = useTranslation();
+
+  const SORT_OPTIONS = [
+    { value: "newest" as const, label: t("sort_newest") },
+    { value: "rating" as const, label: t("sort_rating") },
+    { value: "distance" as const, label: t("sort_distance") },
+    { value: "name" as const, label: t("sort_name") },
+  ];
 
   const hasActiveFilters =
     filters.cuisine || filters.open_now || filters.sort !== "newest";
@@ -38,7 +40,7 @@ export function FilterBar({ filters, onChange, hasLocation }: FilterBarProps) {
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
           <Input
-            placeholder="Search restaurants, cuisines…"
+            placeholder={t("search_placeholder")}
             className="h-9 text-sm pl-8"
             value={filters.search}
             onChange={(e) => onChange({ ...filters, search: e.target.value })}
@@ -95,10 +97,10 @@ export function FilterBar({ filters, onChange, hasLocation }: FilterBarProps) {
               )}
               onClick={() => onChange({ ...filters, open_now: !filters.open_now })}
             >
-              Open now
+              {t("open_now")}
             </button>
             <Input
-              placeholder="Cuisine (e.g. Japanese)"
+              placeholder={t("cuisine_placeholder")}
               className="h-7 text-xs flex-1 min-w-28"
               value={filters.cuisine}
               onChange={(e) => onChange({ ...filters, cuisine: e.target.value })}
@@ -111,7 +113,7 @@ export function FilterBar({ filters, onChange, hasLocation }: FilterBarProps) {
                 }
               >
                 <X className="w-3 h-3" />
-                Clear
+                {t("clear")}
               </button>
             )}
           </div>

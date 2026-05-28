@@ -1,22 +1,25 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Compass, BookmarkIcon, Sparkles } from "lucide-react";
+import { Compass, BookmarkIcon, Sparkles, Map } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const NAV_ITEMS = [
-  { href: "/discover", label: "Discover", icon: Compass },
-  { href: "/bookmarks", label: "Saved", icon: BookmarkIcon },
-  { href: "/recommend", label: "AI Pick", icon: Sparkles },
-] as const;
+import { useTranslation } from "@/lib/i18n";
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { t } = useTranslation();
+
+  const NAV_ITEMS = [
+    { href: "/discover", labelKey: "nav_discover" as const, icon: Compass },
+    { href: "/bookmarks", labelKey: "nav_saved" as const, icon: BookmarkIcon },
+    { href: "/recommend", labelKey: "nav_ai_pick" as const, icon: Sparkles },
+    { href: "/map", labelKey: "nav_map" as const, icon: Map },
+  ];
 
   return (
     <nav className="fixed bottom-0 inset-x-0 z-50 bg-card/95 backdrop-blur border-t border-border shadow-[0_-1px_4px_oklch(0_0_0/0.06)] pb-safe">
       <div className="flex items-stretch h-16 max-w-lg mx-auto">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+        {NAV_ITEMS.map(({ href, labelKey, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + "/");
           return (
             <Link
@@ -38,7 +41,7 @@ export function BottomNav() {
                   strokeWidth={active ? 2.5 : 1.75}
                 />
               </div>
-              <span className={cn("font-medium", active && "font-semibold")}>{label}</span>
+              <span className={cn("font-medium", active && "font-semibold")}>{t(labelKey)}</span>
             </Link>
           );
         })}

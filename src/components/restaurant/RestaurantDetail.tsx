@@ -9,17 +9,18 @@ import { MapLaunchButton } from "./MapLaunchButton";
 import { BookmarkButton } from "@/components/bookmark/BookmarkButton";
 import { trpc } from "@/client/trpc";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslation, type TranslationKey } from "@/lib/i18n";
 import type { WeeklyHours } from "@/shared/types/restaurant";
 
-const DAY_LABELS = {
-  mon: "Monday",
-  tue: "Tuesday",
-  wed: "Wednesday",
-  thu: "Thursday",
-  fri: "Friday",
-  sat: "Saturday",
-  sun: "Sunday",
-};
+const DAY_KEYS: { key: TranslationKey; dayKey: string }[] = [
+  { key: "day_mon", dayKey: "mon" },
+  { key: "day_tue", dayKey: "tue" },
+  { key: "day_wed", dayKey: "wed" },
+  { key: "day_thu", dayKey: "thu" },
+  { key: "day_fri", dayKey: "fri" },
+  { key: "day_sat", dayKey: "sat" },
+  { key: "day_sun", dayKey: "sun" },
+];
 
 const PLATFORM_LABELS: Record<string, string> = {
   google: "Google Maps",
@@ -33,7 +34,10 @@ interface RestaurantDetailProps {
 }
 
 export function RestaurantDetail({ id }: RestaurantDetailProps) {
-  const { data: restaurant, isLoading } = trpc.restaurants.getById.useQuery({ id });
+  const { data: restaurant, isLoading } = trpc.restaurants.getById.useQuery({
+    id,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  });
 
   if (isLoading) {
     return (
@@ -57,6 +61,7 @@ export function RestaurantDetail({ id }: RestaurantDetailProps) {
     );
   }
 
+  const { t } = useTranslation();
   const hours = restaurant.hours as WeeklyHours | null;
   const sourcePlatforms = restaurant.sources ?? [];
 
@@ -78,7 +83,7 @@ export function RestaurantDetail({ id }: RestaurantDetailProps) {
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back
+          {t("back")}
         </Link>
       </div>
 
@@ -136,7 +141,7 @@ export function RestaurantDetail({ id }: RestaurantDetailProps) {
                 className="inline-flex items-center gap-1.5 text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-full hover:bg-blue-100 transition-colors"
               >
                 <CalendarCheck className="w-3 h-3" />
-                Reserve via Google
+                {t("reserve_google")}
               </a>
             )}
             {openriceBookable && openriceSource && (
@@ -147,7 +152,7 @@ export function RestaurantDetail({ id }: RestaurantDetailProps) {
                 className="inline-flex items-center gap-1.5 text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1.5 rounded-full hover:bg-orange-100 transition-colors"
               >
                 <CalendarCheck className="w-3 h-3" />
-                Book via OpenRice
+                {t("book_openrice")}
               </a>
             )}
           </div>
@@ -158,10 +163,10 @@ export function RestaurantDetail({ id }: RestaurantDetailProps) {
 
       {/* ℹ️ Info */}
       <div className="px-4 py-4 space-y-3">
-        <p className="text-xs text-muted-foreground uppercase tracking-wider">ℹ️ Info</p>
+        <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("info_section")}</p>
         {restaurant.address && (
           <div className="text-sm">
-            <p className="text-muted-foreground text-xs mb-1">Address</p>
+            <p className="text-muted-foreground text-xs mb-1">{t("address_label")}</p>
             <p className="text-foreground">{restaurant.address}</p>
           </div>
         )}
@@ -194,23 +199,17 @@ export function RestaurantDetail({ id }: RestaurantDetailProps) {
           <div className="px-4 py-4">
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" />
-              🕐 Hours
+              {t("hours_section")}
             </p>
             <div className="space-y-1.5">
-              {(Object.keys(DAY_LABELS) as Array<keyof typeof DAY_LABELS>).map((key) => {
-                const day = hours[key];
+              {DAY_KEYS.map(({ key, dayKey }) => {
+                const day = hours[dayKey as keyof WeeklyHours];
                 return (
-                  <div key={key} className="flex justify-between text-sm">
-                    <span className="text-muted-foreground capitalize">
-                      {DAY_LABELS[key]}
-                    </span>
+                  <div key={dayKey} className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">{t(key)}</span>
                     <span className="text-foreground">
                       {day ? (
-                        day.closed ? (
-                          "Closed"
-                        ) : (
-                          `${day.open} – ${day.close}`
-                        )
+                        day.closed ? t("closed_today") : `${day.open} – ${day.close}`
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       )}
@@ -226,7 +225,7 @@ export function RestaurantDetail({ id }: RestaurantDetailProps) {
       {/* 🔗 Links */}
       <Separator />
       <div className="px-4 py-4">
-        <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">🔗 Links</p>
+        <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">{t("links_section")}</p>
         <div className="flex flex-wrap gap-2">
           {/* Existing sources */}
           {sourcePlatforms.map((s) => (
@@ -250,7 +249,7 @@ export function RestaurantDetail({ id }: RestaurantDetailProps) {
               className="inline-flex items-center gap-1.5 text-xs bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1.5 rounded-full hover:bg-orange-100 transition-colors"
             >
               <ExternalLink className="w-3 h-3" />
-              Search OpenRice
+              {t("search_openrice")}
             </a>
           )}
         </div>

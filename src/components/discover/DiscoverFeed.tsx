@@ -8,6 +8,7 @@ import { LocationPrompt } from "./LocationPrompt";
 import { ImportDialog } from "@/components/bookmark/ImportDialog";
 import { useLocation } from "@/client/hooks/useLocation";
 import { trpc } from "@/client/trpc";
+import { useTranslation } from "@/lib/i18n";
 import type { Restaurant } from "@/shared/types/restaurant";
 
 const DEFAULT_FILTERS: FilterState = {
@@ -19,6 +20,7 @@ const DEFAULT_FILTERS: FilterState = {
 
 export function DiscoverFeed() {
   const location = useLocation();
+  const { t } = useTranslation();
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const [showLocationPrompt, setShowLocationPrompt] = useState(
     location.granted === null
@@ -57,8 +59,8 @@ export function DiscoverFeed() {
       <div className="px-4 pt-4 pb-2 flex items-center justify-between">
         <span className="text-sm text-muted-foreground">
           {query.isLoading
-            ? "Loading…"
-            : `${restaurants.length} restaurant${restaurants.length !== 1 ? "s" : ""}`}
+            ? t("loading")
+            : `${restaurants.length} ${t("restaurants_count_one")}`}
         </span>
         <ImportDialog />
       </div>
@@ -85,15 +87,14 @@ export function DiscoverFeed() {
 }
 
 function EmptyState() {
+  const { t } = useTranslation();
   return (
     <div className="text-center py-16 text-muted-foreground">
       <div className="w-14 h-14 rounded-full bg-primary/8 flex items-center justify-center mx-auto mb-4">
         <UtensilsCrossed className="w-7 h-7 text-primary/60" />
       </div>
-      <p className="font-medium text-foreground">No restaurants yet</p>
-      <p className="text-sm mt-1">
-        Paste a Google Maps or Yelp link to get started.
-      </p>
+      <p className="font-medium text-foreground">{t("no_restaurants_title")}</p>
+      <p className="text-sm mt-1">{t("no_restaurants_body")}</p>
     </div>
   );
 }

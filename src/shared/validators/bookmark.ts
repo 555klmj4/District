@@ -17,6 +17,7 @@ export const BookmarkListInput = z.object({
   sort: z.enum(["newest", "oldest", "name", "rating"]).default("newest"),
   cuisine: z.string().optional(),
   visited: z.boolean().optional(),
+  timezone: z.string().optional(),
   limit: z.number().int().min(1).max(100).default(50),
   cursor: z.string().uuid().optional(),
 });

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { trpc } from "@/client/trpc";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 
 interface FeedbackButtonsProps {
   historyId: string;
@@ -11,20 +12,14 @@ interface FeedbackButtonsProps {
   className?: string;
 }
 
-export function FeedbackButtons({
-  historyId,
-  restaurantId,
-  className,
-}: FeedbackButtonsProps) {
+export function FeedbackButtons({ historyId, restaurantId, className }: FeedbackButtonsProps) {
+  const { t } = useTranslation();
+
   const submit = trpc.feedback.submit.useMutation({
     onSuccess: (_, vars) => {
-      const msg =
-        vars.signal === "thumbs_up"
-          ? "Thanks! We'll recommend more like this."
-          : "Got it, we'll adjust your recommendations.";
-      toast.success(msg);
+      toast.success(vars.signal === "thumbs_up" ? t("feedback_good_toast") : t("feedback_bad_toast"));
     },
-    onError: () => toast.error("Failed to save feedback"),
+    onError: () => toast.error(t("feedback_error")),
   });
 
   return (
@@ -39,7 +34,7 @@ export function FeedbackButtons({
         }
       >
         <ThumbsUp className="w-4 h-4" />
-        Good pick
+        {t("feedback_good")}
       </Button>
       <Button
         variant="ghost"
@@ -51,7 +46,7 @@ export function FeedbackButtons({
         }
       >
         <ThumbsDown className="w-4 h-4" />
-        Not for me
+        {t("feedback_bad")}
       </Button>
     </div>
   );

@@ -12,10 +12,12 @@ import {
 } from "@/components/ui/dialog";
 import { trpc } from "@/client/trpc";
 import { toast } from "sonner";
+import { useTranslation } from "@/lib/i18n";
 
 export function ImportDialog() {
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState("");
+  const { t } = useTranslation();
 
   const utils = trpc.useUtils();
   const importMutation = trpc.ingestion.importUrl.useMutation({
@@ -47,7 +49,6 @@ export function ImportDialog() {
       { url: url.trim() },
       {
         onSuccess: (data) => {
-          // Auto-bookmark after import
           bookmarkMutation.mutate({ restaurant_id: data.restaurant_id });
         },
       }
@@ -60,22 +61,19 @@ export function ImportDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button className="gap-2" />}>
         <Plus className="w-4 h-4" />
-        Add Restaurant
+        {t("add_restaurant")}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Restaurant</DialogTitle>
+          <DialogTitle>{t("add_restaurant")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
-          <p className="text-sm text-muted-foreground">
-            Paste a Google Maps, OpenRice, or Yelp link to import and bookmark a
-            restaurant.
-          </p>
+          <p className="text-sm text-muted-foreground">{t("import_description")}</p>
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="https://maps.google.com/..."
+                placeholder={t("import_placeholder")}
                 className="pl-9"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
@@ -85,22 +83,16 @@ export function ImportDialog() {
               />
             </div>
             <Button onClick={handleImport} disabled={!url.trim() || isPending}>
-              {isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                "Import"
-              )}
+              {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : t("import_button")}
             </Button>
           </div>
           {importMutation.isSuccess && (
             <p className="text-sm text-[var(--open-green)] flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4" />
-              Successfully imported!
+              {t("import_success")}
             </p>
           )}
-          <p className="text-xs text-muted-foreground">
-            Supported: Google Maps links, OpenRice pages, Yelp business pages
-          </p>
+          <p className="text-xs text-muted-foreground">{t("import_supported")}</p>
         </div>
       </DialogContent>
     </Dialog>

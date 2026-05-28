@@ -9,23 +9,28 @@ export interface ParsedUrl {
   originalUrl: string;
 }
 
+const MOBILE_UA =
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1";
+
 export async function parseAndResolveUrl(rawUrl: string): Promise<ParsedUrl> {
-  // Follow redirects (goo.gl/maps short links, etc.)
   let url = rawUrl;
-  if (
+
+  const needsRedirect =
     rawUrl.includes("goo.gl") ||
     rawUrl.includes("maps.app.goo.gl") ||
-    rawUrl.includes("bit.ly")
-  ) {
+    rawUrl.includes("bit.ly");
+
+  if (needsRedirect) {
     try {
       const res = await fetch(rawUrl, {
         method: "GET",
         redirect: "follow",
-        signal: AbortSignal.timeout(5000),
+        headers: { "User-Agent": MOBILE_UA },
+        signal: AbortSignal.timeout(8000),
       });
       url = res.url || rawUrl;
     } catch {
-      // Use original URL if redirect fails
+      // fall through and try to parse the original URL
     }
   }
 
@@ -46,24 +51,34 @@ function tryParseUrl(url: string): Omit<ParsedUrl, "originalUrl"> {
   // ── Google Maps ────────────────────────────────────────────────────────────
   if (
     hostname === "maps.google.com" ||
+    hostname === "maps.google.com.hk" ||
     hostname.includes("maps.app.goo.gl") ||
-    ((hostname === "www.google.com" || hostname === "google.com") && pathname.startsWith("/maps"))
+    ((hostname === "www.google.com" || hostname === "google.com") &&
+      (pathname.startsWith("/maps") || searchParams.has("q") || searchParams.has("cid")))
   ) {
-    // Try to extract place_id from URL params
+    // Place ID from explicit param
     const placeId = searchParams.get("place_id") ?? extractPlaceIdFromData(url);
 
-    // Try to extract restaurant name from /place/NAME/ segment
-    const placeMatch = pathname.match(/\/place\/([^/]+)\//);
-    const restaurantName = placeMatch
-      ? decodeURIComponent(placeMatch[1]!).replace(/\+/g, " ")
+    // Restaurant name — try multiple patterns
+    const placeMatch =
+      pathname.match(/\/place\/([^/@]+)/) ??        // /maps/place/NAME or /maps/place/NAME/@...
+      pathname.match(/\/search\/([^/@]+)/);          // /maps/search/NAME
+    let restaurantName = placeMatch
+      ? decodeURIComponent(placeMatch[1]!).replace(/\+/g, " ").trim()
       : null;
 
-    // Try to extract lat/lng from @lat,lng,zoom
-    const coordMatch = pathname.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    // Also try ?q= parameter (used by some iOS share formats)
+    if (!restaurantName && searchParams.has("q")) {
+      restaurantName = searchParams.get("q");
+    }
+
+    // lat/lng from @lat,lng,zoom
+    const coordMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
     const latLng = coordMatch
       ? { lat: parseFloat(coordMatch[1]!), lng: parseFloat(coordMatch[2]!) }
       : null;
 
+    // If we only have a CID (0x...) but no proper Place ID, we'll fall back to text search
     return { platform: "google", placeId, restaurantName, latLng };
   }
 

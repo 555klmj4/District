@@ -14,7 +14,7 @@ export const bookmarksRouter = router({
     .input(BookmarkListInput)
     .query(async ({ ctx, input }) => {
       const { userId, db } = ctx;
-      const { sort, cuisine, visited, limit, cursor } = input;
+      const { sort, cuisine, visited, timezone, limit, cursor } = input;
 
       const conditions = [eq(bookmarks.user_id, userId)];
 
@@ -59,7 +59,7 @@ export const bookmarksRouter = router({
           restaurant: {
             ...restaurant,
             is_open_now: restaurant.hours
-              ? isOpenNow(restaurant.hours)
+              ? isOpenNow(restaurant.hours, timezone)
               : undefined,
           },
         })),

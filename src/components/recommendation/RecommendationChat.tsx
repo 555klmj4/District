@@ -9,10 +9,12 @@ import { RecommendationCard } from "./RecommendationCard";
 import { trpc } from "@/client/trpc";
 import { useLocation } from "@/client/hooks/useLocation";
 import { toast } from "sonner";
+import { useTranslation } from "@/lib/i18n";
 import type { ScoredCandidate } from "@/shared/types/recommendation";
 
 export function RecommendationChat() {
   const location = useLocation();
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [openNow, setOpenNow] = useState(false);
   const [result, setResult] = useState<{
@@ -57,7 +59,7 @@ export function RecommendationChat() {
       <div className="space-y-3">
         <div className="flex gap-2">
           <Input
-            placeholder='What are you feeling? (e.g. "something cozy for tonight")'
+            placeholder={t("query_placeholder")}
             className="flex-1"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -74,7 +76,7 @@ export function RecommendationChat() {
             ) : (
               <Sparkles className="w-4 h-4" />
             )}
-            {isLoading ? "Thinking…" : "Suggest"}
+            {isLoading ? t("thinking") : t("suggest")}
           </Button>
         </div>
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
@@ -95,12 +97,12 @@ export function RecommendationChat() {
             >
               {openNow && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
             </span>
-            Open now only
+            {t("open_now_only")}
           </button>
           {location.lat && (
             <span className="inline-flex items-center gap-1 text-xs text-primary/70">
               <MapPin className="w-3 h-3" />
-              Location active
+              {t("location_active")}
             </span>
           )}
         </div>
@@ -126,7 +128,7 @@ export function RecommendationChat() {
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="w-4 h-4 text-primary" />
                 <span className="text-xs font-semibold text-primary uppercase tracking-wider">
-                  AI Insight
+                  {t("ai_insight")}
                 </span>
               </div>
               <p className="text-sm text-foreground/90 leading-relaxed">
@@ -153,11 +155,8 @@ export function RecommendationChat() {
       {!isLoading && !result && (
         <div className="text-center py-12 text-muted-foreground">
           <Sparkles className="w-10 h-10 mx-auto mb-3 text-primary/40" />
-          <p className="font-medium">Your personal dining advisor</p>
-          <p className="text-sm mt-1 max-w-xs mx-auto">
-            Ask for a recommendation or just tap Suggest. District learns your
-            taste from your saved restaurants.
-          </p>
+          <p className="font-medium">{t("ai_advisor_title")}</p>
+          <p className="text-sm mt-1 max-w-xs mx-auto">{t("ai_advisor_body")}</p>
         </div>
       )}
     </div>

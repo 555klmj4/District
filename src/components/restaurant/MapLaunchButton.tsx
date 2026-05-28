@@ -1,6 +1,8 @@
+"use client";
 import { MapPin } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 
 interface MapLaunchButtonProps {
   name: string;
@@ -19,8 +21,9 @@ export function MapLaunchButton({
   className,
   size = "default",
 }: MapLaunchButtonProps) {
-  let href: string;
+  const { t } = useTranslation();
 
+  let href: string;
   if (placeId) {
     href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}&query_place_id=${placeId}`;
   } else if (lat && lng) {
@@ -37,7 +40,7 @@ export function MapLaunchButton({
       className={cn(buttonVariants({ variant: "secondary", size }), "gap-2", className)}
     >
       <MapPin className="w-4 h-4" />
-      {size === "default" ? "Open in Maps" : "Maps"}
+      {t("open_in_maps")}
     </a>
   );
 }

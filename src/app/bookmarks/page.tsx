@@ -4,7 +4,7 @@ import { ImportDialog } from "@/components/bookmark/ImportDialog";
 
 export default function BookmarksPage() {
   return (
-    <PageShell title="🔖 Saved">
+    <PageShell titleKey="page_saved">
       <div className="px-4 py-3 flex justify-end border-b border-border">
         <ImportDialog />
       </div>
