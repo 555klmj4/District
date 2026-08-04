@@ -17,8 +17,11 @@ function formatTimestamp(date: Date, lang: string) {
 
 export function ActivityFeed() {
   const { t, lang } = useTranslation();
-  const query = trpc.activity.list.useQuery({ limit: 50 });
-  const items = query.data?.items ?? [];
+  const query = trpc.activity.list.useInfiniteQuery(
+    { limit: 50 },
+    { getNextPageParam: (lastPage) => lastPage.next_cursor ?? undefined }
+  );
+  const items = query.data?.pages.flatMap((page) => page.items) ?? [];
 
   const verbKey = (action: string): TranslationKey => {
     switch (action) {
@@ -80,6 +83,17 @@ export function ActivityFeed() {
           </div>
         );
       })}
+      {query.hasNextPage && (
+        <div className="py-4 flex justify-center">
+          <button
+            onClick={() => void query.fetchNextPage()}
+            disabled={query.isFetchingNextPage}
+            className="text-sm text-primary font-medium disabled:opacity-50"
+          >
+            {query.isFetchingNextPage ? t("loading") : t("history_load_more")}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

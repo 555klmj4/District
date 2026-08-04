@@ -37,7 +37,7 @@ export function ColorPicker({ restaurantId, activeTags, className }: ColorPicker
       setColorTagOverride(restaurantId, activeTags);
     },
     onSuccess: () => {
-      void utils.restaurants.list.invalidate(undefined, { refetchType: 'all' });
+      void utils.restaurants.list.invalidate();
       void utils.restaurants.getById.invalidate({ id: restaurantId });
     },
   });

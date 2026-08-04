@@ -129,6 +129,7 @@ export const en = {
   history_verb_color_removed: "Removed color tag from",
   history_verb_starred: "Starred",
   history_verb_unstarred: "Unstarred",
+  history_load_more: "Load more",
 
   // Starred
   starred_section_title: "Starred",
@@ -269,6 +270,7 @@ export const zhTW: Record<keyof typeof en, string> = {
   history_verb_color_removed: "移除顏色標籤於",
   history_verb_starred: "加了星號",
   history_verb_unstarred: "移除了星號",
+  history_load_more: "載入更多",
 
   // Starred
   starred_section_title: "已加星號",

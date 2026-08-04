@@ -18,11 +18,18 @@ export default function LoginPage() {
     setStatus("loading");
     setErrorMsg("");
 
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ passphrase }),
-    });
+    let res: Response;
+    try {
+      res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ passphrase }),
+      });
+    } catch {
+      setErrorMsg("Network error — check your connection and try again");
+      setStatus("error");
+      return;
+    }
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
@@ -46,7 +53,11 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
+            <label htmlFor="passphrase" className="sr-only">
+              Passphrase
+            </label>
             <input
+              id="passphrase"
               autoFocus
               type={show ? "text" : "password"}
               placeholder="Passphrase"
@@ -69,9 +80,11 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {errorMsg && (
-            <p className="text-sm text-destructive">{errorMsg}</p>
-          )}
+          <div aria-live="polite">
+            {errorMsg && (
+              <p className="text-sm text-destructive">{errorMsg}</p>
+            )}
+          </div>
 
           <button
             type="submit"

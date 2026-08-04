@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Ban, Search, Star, X } from "lucide-react";
 import { TAG_COLORS, colorHex } from "@/lib/colors";
@@ -75,8 +75,15 @@ export function FilterBar({ filters, onChange, hasLocation, availableColors, ava
     { value: "name" as const, label: t("sort_name") },
   ];
 
-  const hasColors = TAG_COLORS.some((c) => availableColors.has(c.id));
-  const sortedDistricts = [...availableDistricts].sort((a, b) => a.localeCompare(b));
+  const visibleColors = useMemo(
+    () => TAG_COLORS.filter((color) => availableColors.has(color.id)),
+    [availableColors]
+  );
+  const hasColors = visibleColors.length > 0;
+  const sortedDistricts = useMemo(
+    () => [...availableDistricts].sort((a, b) => a.localeCompare(b)),
+    [availableDistricts]
+  );
 
   return (
     <div className="bg-background border-b border-border space-y-0">
@@ -180,7 +187,7 @@ export function FilterBar({ filters, onChange, hasLocation, availableColors, ava
             >
               <Ban className="w-4 h-4" />
             </button>
-            {TAG_COLORS.filter((color) => availableColors.has(color.id)).map((color) => {
+            {visibleColors.map((color) => {
               const isInclude = filters.includeColors.includes(color.id);
               const isExclude = filters.excludeColors.includes(color.id);
               return (

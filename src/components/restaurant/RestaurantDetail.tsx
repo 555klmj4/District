@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Phone, Globe, CalendarCheck, ExternalLink, Link2, Trash2, Share2, Check, Loader2 } from "lucide-react";
@@ -82,9 +82,26 @@ export function RestaurantDetail({ id, initialData, initialDataUpdatedAt }: Rest
   // Earliest source row = the platform link the user actually pasted to add
   // this restaurant — supplementary sources (e.g. Google data auto-fetched
   // alongside an OpenRice import) are always inserted after it.
-  const originSource = [...sourcePlatforms].sort(
-    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-  )[0];
+  const originSource = useMemo(
+    () => [...sourcePlatforms].sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    )[0],
+    [sourcePlatforms]
+  );
+  // Non-Google, non-OpenRice links
+  const otherLinks = useMemo(
+    () => sourcePlatforms.filter((s) => s.platform !== "google" && s.platform !== "openrice"),
+    [sourcePlatforms]
+  );
+  const filteredTags = useMemo(() => {
+    if (!restaurant) return [];
+    return (restaurant.cuisine_tags ?? []).filter((tag) => {
+      const tl = tag.toLowerCase();
+      const pl = (restaurant.cuisine_primary ?? "").toLowerCase();
+      const zl = (restaurant.cuisine_primary_zh ?? "").toLowerCase();
+      return tl !== pl && tl !== zl && !tl.includes(pl) && !pl.includes(tl);
+    }).slice(0, 3);
+  }, [restaurant]);
 
   // Auto-refresh Google data when photos or Chinese name are missing, but only
   // if data is stale (>7 days). A missing OpenRice link is checked separately,
@@ -147,13 +164,6 @@ export function RestaurantDetail({ id, initialData, initialDataUpdatedAt }: Rest
   const displayAddress = (zh && hasChinese(restaurant.address_zh))         ? restaurant.address_zh!         : restaurant.address;
   const displayCuisine = (zh && hasChinese(restaurant.cuisine_primary_zh)) ? restaurant.cuisine_primary_zh! : restaurant.cuisine_primary;
 
-  const filteredTags = (restaurant.cuisine_tags ?? []).filter((tag) => {
-    const tl = tag.toLowerCase();
-    const pl = (restaurant.cuisine_primary ?? "").toLowerCase();
-    const zl = (restaurant.cuisine_primary_zh ?? "").toLowerCase();
-    return tl !== pl && tl !== zl && !tl.includes(pl) && !pl.includes(tl);
-  }).slice(0, 3);
-
   const googleSource = sourcePlatforms.find((s) => s.platform === "google");
   const googleRawData = googleSource?.raw_data as Record<string, unknown> | null;
   const googlePhotos = (googleRawData?.photos as Array<{ name: string }> | undefined) ?? [];
@@ -198,9 +208,6 @@ export function RestaurantDetail({ id, initialData, initialDataUpdatedAt }: Rest
       copyToClipboard(url, setCopied);
     }
   };
-
-  // Non-Google, non-OpenRice links
-  const otherLinks = sourcePlatforms.filter((s) => s.platform !== "google" && s.platform !== "openrice");
 
   return (
     <div className="pb-8">

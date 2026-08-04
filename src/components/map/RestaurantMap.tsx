@@ -1,11 +1,12 @@
 "use client";
-import { useMemo, useCallback, useEffect } from "react";
+import { useMemo, useCallback, useEffect, useState } from "react";
 import {
   Map,
   AdvancedMarker,
   Pin,
   useMap,
 } from "@vis.gl/react-google-maps";
+import Supercluster from "supercluster";
 import { colorHex } from "@/lib/colors";
 
 export interface MapRestaurant {
@@ -72,6 +73,119 @@ function PinMarker({ restaurant: r, isSelected, onSelect }: PinMarkerProps) {
         scale={isSelected ? 1.2 : 1}
       />
     </AdvancedMarker>
+  );
+}
+
+interface ClusterPointProps {
+  restaurant: GeoPin;
+}
+
+type ClusterPointFeature = Supercluster.PointFeature<ClusterPointProps>;
+type ClusterOrPoint = ReturnType<Supercluster<ClusterPointProps>["getClusters"]>[number];
+
+// Cluster radius/maxZoom tuned for a single-city restaurant list — past
+// maxZoom every pin renders individually regardless of how close together
+// they are on screen.
+const CLUSTER_RADIUS_PX = 60;
+const CLUSTER_MAX_ZOOM = 16;
+
+function ClusterMarker({ lat, lng, count, onClick }: { lat: number; lng: number; count: number; onClick: () => void }) {
+  const size = count < 10 ? 32 : count < 100 ? 40 : 48;
+  return (
+    <AdvancedMarker position={{ lat, lng }} onClick={onClick} zIndex={5}>
+      <div
+        style={{
+          width: size,
+          height: size,
+          borderRadius: "9999px",
+          background: PIN_RED,
+          border: `2px solid ${PIN_RED_DARK}`,
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontWeight: 700,
+          fontSize: 13,
+        }}
+      >
+        {count}
+      </div>
+    </AdvancedMarker>
+  );
+}
+
+// Clusters pins client-side with supercluster, recomputed on map "idle"
+// (after pan/zoom settles) rather than on every frame — matches how
+// MapController already treats "idle" as the interaction-settled signal.
+function ClusteredMarkers({ pins, selectedId, onSelect }: { pins: GeoPin[]; selectedId: string | null; onSelect: (id: string | null) => void }) {
+  const map = useMap();
+
+  const index = useMemo(() => {
+    const idx = new Supercluster<ClusterPointProps>({ radius: CLUSTER_RADIUS_PX, maxZoom: CLUSTER_MAX_ZOOM });
+    idx.load(
+      pins.map((r): ClusterPointFeature => ({
+        type: "Feature",
+        properties: { restaurant: r },
+        geometry: { type: "Point", coordinates: [r.lngNum, r.latNum] },
+      }))
+    );
+    return idx;
+  }, [pins]);
+
+  const [clusters, setClusters] = useState<ClusterOrPoint[]>([]);
+
+  const recompute = useCallback(() => {
+    if (!map) return;
+    const bounds = map.getBounds();
+    const zoom = map.getZoom();
+    if (!bounds || zoom == null) return;
+    const ne = bounds.getNorthEast();
+    const sw = bounds.getSouthWest();
+    setClusters(index.getClusters([sw.lng(), sw.lat(), ne.lng(), ne.lat()], Math.round(zoom)));
+  }, [map, index]);
+
+  useEffect(() => {
+    if (!map) return;
+    // Initial clustering as soon as the map + pins are ready, then re-cluster
+    // whenever pan/zoom settles via the "idle" subscription below.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    recompute();
+    const listener = map.addListener("idle", recompute);
+    return () => listener.remove();
+  }, [map, recompute]);
+
+  return (
+    <>
+      {clusters.map((feature) => {
+        const [lng, lat] = feature.geometry.coordinates;
+        if ("cluster" in feature.properties && feature.properties.cluster) {
+          const clusterId = feature.properties.cluster_id;
+          const count = feature.properties.point_count;
+          return (
+            <ClusterMarker
+              key={`cluster-${clusterId}`}
+              lat={lat}
+              lng={lng}
+              count={count}
+              onClick={() => {
+                if (!map) return;
+                map.setZoom(Math.min(index.getClusterExpansionZoom(clusterId), 20));
+                map.panTo({ lat, lng });
+              }}
+            />
+          );
+        }
+        const { restaurant } = feature.properties;
+        return (
+          <PinMarker
+            key={restaurant.id}
+            restaurant={restaurant}
+            isSelected={restaurant.id === selectedId}
+            onSelect={onSelect}
+          />
+        );
+      })}
+    </>
   );
 }
 
@@ -209,14 +323,7 @@ export function RestaurantMap({ restaurants, selectedId, onSelect, targetBounds,
       onIdle={() => onInteractingChange?.(false)}
     >
       <MapController targetBounds={targetBounds} focusRequest={focusRequest} />
-      {pins.map((r) => (
-        <PinMarker
-          key={r.id}
-          restaurant={r}
-          isSelected={r.id === selectedId}
-          onSelect={onSelect}
-        />
-      ))}
+      <ClusteredMarkers pins={pins} selectedId={selectedId} onSelect={onSelect} />
     </Map>
   );
 }
