@@ -1,6 +1,6 @@
 "use client";
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { SlidersHorizontal, UtensilsCrossed } from "lucide-react";
+import { SlidersHorizontal, UtensilsCrossed, TriangleAlert } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RestaurantCard } from "@/components/restaurant/RestaurantCard";
 import { FilterBar, type FilterState } from "./FilterBar";
@@ -345,6 +345,8 @@ export function DiscoverFeed() {
             <Skeleton key={i} className="h-14 rounded-lg" />
           ))}
         </div>
+      ) : query.isError ? (
+        <ErrorState onRetry={() => query.refetch()} />
       ) : restaurants.length === 0 ? (
         <EmptyState />
       ) : (
@@ -455,6 +457,22 @@ function EmptyState() {
       </div>
       <p className="font-medium text-foreground">{t("no_restaurants_title")}</p>
       <p className="text-sm mt-1">{t("no_restaurants_body")}</p>
+    </div>
+  );
+}
+
+function ErrorState({ onRetry }: { onRetry: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <div className="text-center py-16 text-muted-foreground">
+      <div className="w-14 h-14 rounded-full bg-destructive/8 flex items-center justify-center mx-auto mb-4">
+        <TriangleAlert className="w-7 h-7 text-destructive/60" />
+      </div>
+      <p className="font-medium text-foreground">{t("list_load_error_title")}</p>
+      <p className="text-sm mt-1">{t("list_load_error_body")}</p>
+      <button onClick={onRetry} className="mt-4 text-sm text-primary font-medium">
+        {t("retry")}
+      </button>
     </div>
   );
 }

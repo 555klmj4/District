@@ -1,5 +1,5 @@
 "use client";
-import { History } from "lucide-react";
+import { History, TriangleAlert } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/client/trpc";
 import { useTranslation, type TranslationKey } from "@/lib/i18n";
@@ -41,6 +41,21 @@ export function ActivityFeed() {
         {Array.from({ length: 8 }).map((_, i) => (
           <Skeleton key={i} className="h-12 rounded-lg" />
         ))}
+      </div>
+    );
+  }
+
+  if (query.isError) {
+    return (
+      <div className="text-center py-16 text-muted-foreground">
+        <div className="w-14 h-14 rounded-full bg-destructive/8 flex items-center justify-center mx-auto mb-4">
+          <TriangleAlert className="w-7 h-7 text-destructive/60" />
+        </div>
+        <p className="font-medium text-foreground">{t("list_load_error_title")}</p>
+        <p className="text-sm mt-1">{t("list_load_error_body")}</p>
+        <button onClick={() => query.refetch()} className="mt-4 text-sm text-primary font-medium">
+          {t("retry")}
+        </button>
       </div>
     );
   }

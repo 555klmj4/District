@@ -22,6 +22,13 @@ export function colorLight(id: string): string {
 
 export const NO_COLOR_ID = "none";
 
+// Shared "starred/bookmarked" color — one reference so the several places
+// that render a starred indicator (list card, search results, import
+// preview) can't silently drift apart from each other.
+export const STAR_COLOR_CLASS = "text-amber-500";
+export const STAR_BG_LIGHT_CLASS = "bg-amber-50";
+export const STAR_BG_LIGHTER_CLASS = "bg-amber-100";
+
 export function sortColorTags<T extends string>(colors: T[]): T[] {
   return [...colors].sort(
     (a, b) => TAG_COLOR_IDS.indexOf(a as TagColor) - TAG_COLOR_IDS.indexOf(b as TagColor)

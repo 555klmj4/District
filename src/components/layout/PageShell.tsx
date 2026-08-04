@@ -2,7 +2,9 @@
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { LogOut, LocateFixed, Locate, Loader2, History } from "lucide-react";
+import { toast } from "sonner";
 import { BottomNav } from "./BottomNav";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n";
 import { useLocation } from "@/client/hooks/useLocation";
@@ -20,13 +22,20 @@ export function PageShell({ children, className }: PageShellProps) {
   const onHistoryPage = pathname === "/history";
 
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
   const toggleLang = () => setLang(lang === "en" ? "zh-TW" : "en");
 
   async function handleLogout() {
     setIsLoggingOut(true);
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
-    router.refresh();
+    try {
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      if (!res.ok) throw new Error();
+      router.push("/login");
+      router.refresh();
+    } catch {
+      toast.error(t("logout_error"));
+      setIsLoggingOut(false);
+    }
   }
 
   return (
@@ -69,7 +78,7 @@ export function PageShell({ children, className }: PageShellProps) {
               : <Locate className="h-4 w-4" />}
           </button>
           <button
-            onClick={handleLogout}
+            onClick={() => setConfirmLogoutOpen(true)}
             disabled={isLoggingOut}
             className="text-muted-foreground hover:text-foreground transition-colors p-1 disabled:opacity-50"
             aria-label="Log out"
@@ -80,6 +89,33 @@ export function PageShell({ children, className }: PageShellProps) {
       </header>
       <main className={cn("flex-1 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] pt-2", className)}>{children}</main>
       <BottomNav />
+
+      <Dialog open={confirmLogoutOpen} onOpenChange={setConfirmLogoutOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("logout_title")}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">{t("logout_confirm")}</p>
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={() => setConfirmLogoutOpen(false)}
+              className="flex-1 py-1.5 rounded-md border border-border text-sm font-medium hover:bg-muted transition-colors"
+            >
+              {t("delete_cancel")}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setConfirmLogoutOpen(false); void handleLogout(); }}
+              disabled={isLoggingOut}
+              className="flex-1 py-1.5 rounded-md bg-destructive text-destructive-foreground text-sm font-semibold hover:bg-destructive/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              {isLoggingOut && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              {t("logout_confirm_button")}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

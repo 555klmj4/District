@@ -8,6 +8,7 @@ import {
 } from "@vis.gl/react-google-maps";
 import Supercluster from "supercluster";
 import { colorHex } from "@/lib/colors";
+import { useTranslation } from "@/lib/i18n";
 
 export interface MapRestaurant {
   id: string;
@@ -60,6 +61,8 @@ const PIN_RED = colorHex("red");
 const PIN_RED_DARK = `${PIN_RED}CC`;
 
 function PinMarker({ restaurant: r, isSelected, onSelect }: PinMarkerProps) {
+  const pinColor = r.color_tags?.[0] ? colorHex(r.color_tags[0]) : PIN_RED;
+  const pinColorDark = `${pinColor}CC`;
   return (
     <AdvancedMarker
       position={{ lat: r.latNum, lng: r.lngNum }}
@@ -67,8 +70,8 @@ function PinMarker({ restaurant: r, isSelected, onSelect }: PinMarkerProps) {
       zIndex={isSelected ? 10 : 1}
     >
       <Pin
-        background={isSelected ? PIN_RED_DARK : PIN_RED}
-        borderColor={PIN_RED_DARK}
+        background={isSelected ? pinColorDark : pinColor}
+        borderColor={pinColorDark}
         glyphColor="white"
         scale={isSelected ? 1.2 : 1}
       />
@@ -90,10 +93,21 @@ const CLUSTER_RADIUS_PX = 60;
 const CLUSTER_MAX_ZOOM = 16;
 
 function ClusterMarker({ lat, lng, count, onClick }: { lat: number; lng: number; count: number; onClick: () => void }) {
+  const { t } = useTranslation();
   const size = count < 10 ? 32 : count < 100 ? 40 : 48;
+  const label = `${count} ${count === 1 ? t("restaurants_count_one") : t("restaurants_count_other")}`;
   return (
     <AdvancedMarker position={{ lat, lng }} onClick={onClick} zIndex={5}>
       <div
+        role="button"
+        tabIndex={0}
+        aria-label={label}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onClick();
+          }
+        }}
         style={{
           width: size,
           height: size,

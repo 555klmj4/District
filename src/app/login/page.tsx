@@ -3,7 +3,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Eye, EyeOff } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -56,19 +57,15 @@ export default function LoginPage() {
             <label htmlFor="passphrase" className="sr-only">
               Passphrase
             </label>
-            <input
+            <Input
               id="passphrase"
               autoFocus
               type={show ? "text" : "password"}
               placeholder="Passphrase"
               value={passphrase}
               onChange={(e) => setPassphrase(e.target.value)}
-              className={cn(
-                "w-full rounded-xl border border-input bg-card px-4 py-3 pr-12 text-base",
-                "placeholder:text-muted-foreground",
-                "focus:outline-none focus:ring-2 focus:ring-ring",
-                errorMsg && "border-destructive focus:ring-destructive"
-              )}
+              aria-invalid={!!errorMsg}
+              className="pr-12"
             />
             <button
               type="button"
@@ -86,17 +83,14 @@ export default function LoginPage() {
             )}
           </div>
 
-          <button
+          <Button
             type="submit"
+            size="lg"
             disabled={status === "loading" || passphrase.length < 1}
-            className={cn(
-              "w-full rounded-xl bg-primary py-3 text-sm font-medium text-primary-foreground",
-              "transition-opacity hover:opacity-90",
-              "disabled:opacity-40 disabled:cursor-not-allowed"
-            )}
+            className="w-full"
           >
             {status === "loading" ? "Checking…" : "Enter"}
-          </button>
+          </Button>
         </form>
 
         <p className="text-center text-xs text-muted-foreground">

@@ -16,7 +16,7 @@ import {
 import { trpc } from "@/client/trpc";
 import { useTranslation } from "@/lib/i18n";
 import { districtZh } from "@/lib/district-zh";
-import { colorHex } from "@/lib/colors";
+import { colorHex, STAR_COLOR_CLASS, STAR_BG_LIGHT_CLASS, STAR_BG_LIGHTER_CLASS } from "@/lib/colors";
 import { getColorTagOverride } from "@/lib/colorTagOverride";
 import { cn } from "@/lib/utils";
 import { hasChinese, bilingualName } from "@/lib/restaurant-name";
@@ -44,6 +44,10 @@ export const RestaurantCard = memo(function RestaurantCard({ restaurant, classNa
   const deleteMutation = trpc.restaurants.delete.useMutation({
     onSuccess: () => {
       void utils.restaurants.list.invalidate();
+      setConfirmDeleteOpen(false);
+    },
+    onError: (err) => {
+      toast.error(err.message ?? "Failed to delete restaurant");
     },
   });
 
@@ -107,12 +111,12 @@ export const RestaurantCard = memo(function RestaurantCard({ restaurant, classNa
     : district;
 
   return (
-    <div className={cn("relative overflow-hidden", className)}>
+    <div className={cn("relative overflow-hidden group", className)}>
       <div
-        className="absolute inset-0 flex items-center pl-4 bg-amber-100"
+        className={cn("absolute inset-0 flex items-center pl-4", STAR_BG_LIGHTER_CLASS)}
         style={{ opacity: Math.max(0, Math.min(dragX / SWIPE_THRESHOLD, 1)) }}
       >
-        <Star className="w-5 h-5 text-amber-500" fill="currentColor" />
+        <Star className={cn("w-5 h-5", STAR_COLOR_CLASS)} fill="currentColor" />
       </div>
       <div
         className="absolute inset-0 flex items-center justify-end pr-4 bg-destructive/10"
@@ -123,7 +127,7 @@ export const RestaurantCard = memo(function RestaurantCard({ restaurant, classNa
       <div
         className={cn(
           "flex flex-col",
-          isSelected ? "bg-primary/8" : is_starred ? "bg-amber-50" : "bg-background"
+          isSelected ? "bg-primary/8" : is_starred ? STAR_BG_LIGHT_CLASS : "bg-background"
         )}
         onClick={() => {
           onSelect?.(id);
@@ -143,7 +147,7 @@ export const RestaurantCard = memo(function RestaurantCard({ restaurant, classNa
         <div className="flex-1 min-w-0">
           <span className="inline-flex items-center gap-1">
             {is_starred && (
-              <Star className="w-3 h-3 shrink-0 text-amber-500" fill="currentColor" />
+              <Star className={cn("w-3 h-3 shrink-0", STAR_COLOR_CLASS)} fill="currentColor" />
             )}
             <Link
               href={`/restaurants/${id}`}
@@ -207,6 +211,38 @@ export const RestaurantCard = memo(function RestaurantCard({ restaurant, classNa
             </div>
           </div>
         </div>
+
+        {/* Pointer-only quick actions — touch devices already have the swipe
+            gesture; this exists so mouse/trackpad users have a way to star
+            or delete without opening the detail page. */}
+        <div className="hidden pointer-fine:group-hover:flex items-center gap-0.5 shrink-0">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              starMutation.mutate({ restaurant_id: restaurant.id });
+            }}
+            disabled={starMutation.isPending}
+            className="p-1.5 rounded-md hover:bg-muted transition-colors disabled:opacity-50"
+            aria-label={is_starred ? t("unstar_restaurant") : t("star_restaurant")}
+          >
+            <Star
+              className={cn("w-4 h-4", is_starred ? STAR_COLOR_CLASS : "text-muted-foreground")}
+              fill={is_starred ? "currentColor" : "none"}
+            />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setConfirmDeleteOpen(true);
+            }}
+            className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+            aria-label={t("delete_restaurant")}
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       </div>
       </div>
 
@@ -226,10 +262,7 @@ export const RestaurantCard = memo(function RestaurantCard({ restaurant, classNa
             </button>
             <button
               type="button"
-              onClick={() => {
-                deleteMutation.mutate({ id: restaurant.id });
-                setConfirmDeleteOpen(false);
-              }}
+              onClick={() => deleteMutation.mutate({ id: restaurant.id })}
               disabled={deleteMutation.isPending}
               className="flex-1 py-1.5 rounded-md bg-destructive text-destructive-foreground text-sm font-semibold hover:bg-destructive/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
             >

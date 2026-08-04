@@ -16,6 +16,9 @@ export const en = {
   restaurants_count_other: "restaurants",
   no_restaurants_title: "No restaurants yet",
   no_restaurants_body: "Paste a Google Maps or OpenRice link to get started.",
+  list_load_error_title: "Something went wrong",
+  list_load_error_body: "Couldn't load this. Check your connection and try again.",
+  retry: "Retry",
 
   // Filter bar
   filters_show: "Show filters",
@@ -39,6 +42,7 @@ export const en = {
 
   // Restaurant detail
   not_found: "Restaurant not found.",
+  load_error: "Something went wrong loading this restaurant.",
   back: "Back",
   added_via: "Added via",
   info_section: "Info",
@@ -116,6 +120,12 @@ export const en = {
   delete_cancel: "Cancel",
   delete_success: "Restaurant deleted",
   delete_error: "Failed to delete restaurant",
+
+  // Logout
+  logout_title: "Log out?",
+  logout_confirm: "You'll need your passphrase to sign back in.",
+  logout_confirm_button: "Log out",
+  logout_error: "Failed to log out",
   undo: "Undo",
 
   // History
@@ -157,6 +167,9 @@ export const zhTW: Record<keyof typeof en, string> = {
   restaurants_count_other: "間餐廳",
   no_restaurants_title: "尚無餐廳",
   no_restaurants_body: "貼上 Google Maps 或 OpenRice 連結以開始。",
+  list_load_error_title: "發生錯誤",
+  list_load_error_body: "無法載入，請檢查網路連線後重試。",
+  retry: "重試",
 
   // Filter bar
   filters_show: "顯示篩選",
@@ -180,6 +193,7 @@ export const zhTW: Record<keyof typeof en, string> = {
 
   // Restaurant detail
   not_found: "找不到餐廳。",
+  load_error: "載入餐廳時發生錯誤。",
   back: "返回",
   added_via: "透過",
   info_section: "資訊",
@@ -257,6 +271,12 @@ export const zhTW: Record<keyof typeof en, string> = {
   delete_cancel: "取消",
   delete_success: "餐廳已刪除",
   delete_error: "刪除失敗",
+
+  // Logout
+  logout_title: "登出？",
+  logout_confirm: "重新登入時需要您的通關密語。",
+  logout_confirm_button: "登出",
+  logout_error: "登出失敗",
   undo: "復原",
 
   // History

@@ -25,14 +25,14 @@ export function StatusIndicator({ isOpenNow, label, className }: StatusIndicator
     <span
       className={cn(
         "text-xs font-medium flex items-center gap-1.5",
-        isOpenNow ? "text-[var(--open-green)]" : "text-muted-foreground",
+        isOpenNow ? "text-[var(--open-green)]" : "text-[var(--closed-red)]",
         className
       )}
     >
       <span
         className={cn(
           "w-1.5 h-1.5 rounded-full shrink-0",
-          isOpenNow ? "bg-[var(--open-green)] animate-pulse" : "bg-muted-foreground"
+          isOpenNow ? "bg-[var(--open-green)] animate-pulse" : "bg-[var(--closed-red)]"
         )}
       />
       {label ?? (isOpenNow ? t("open_now_label") : t("closed_label"))}

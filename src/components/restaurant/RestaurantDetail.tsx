@@ -3,7 +3,9 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Phone, Globe, CalendarCheck, ExternalLink, Link2, Trash2, Share2, Check, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RatingBadge } from "./RatingBadge";
 import { StatusIndicator } from "./StatusIndicator";
 import { MapLaunchButton } from "./MapLaunchButton";
@@ -59,7 +61,7 @@ export function RestaurantDetail({ id, initialData, initialDataUpdatedAt }: Rest
   useEffect(() => { setVisiblePhotos(4); setFailedPhotos(new Set()); }, [id]);
   const utils = trpc.useUtils();
 
-  const { data: restaurant, isLoading } = trpc.restaurants.getById.useQuery(
+  const { data: restaurant, isLoading, isError } = trpc.restaurants.getById.useQuery(
     { id, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone },
     { staleTime: 30_000, initialData, initialDataUpdatedAt },
   );
@@ -68,6 +70,9 @@ export function RestaurantDetail({ id, initialData, initialDataUpdatedAt }: Rest
     onSuccess: () => {
       void utils.restaurants.list.invalidate();
       router.replace("/discover");
+    },
+    onError: (err) => {
+      toast.error(err.message ?? t("delete_error"));
     },
   });
 
@@ -149,7 +154,7 @@ export function RestaurantDetail({ id, initialData, initialDataUpdatedAt }: Rest
   if (!restaurant) {
     return (
       <div className="px-4 py-16 text-center text-muted-foreground">
-        <p>{t("not_found")}</p>
+        <p>{isError ? t("load_error") : t("not_found")}</p>
         <Link href="/discover" className="text-primary text-sm mt-2 block">
           ← {t("back")}
         </Link>
@@ -463,36 +468,41 @@ export function RestaurantDetail({ id, initialData, initialDataUpdatedAt }: Rest
 
       {/* Delete */}
       <div className="px-4 pt-2 pb-2">
-        {!confirmDelete ? (
-          <button
-            onClick={() => setConfirmDelete(true)}
-            className="flex items-center gap-2 text-sm text-destructive/60 hover:text-destructive transition-colors"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            {t("delete_restaurant")}
-          </button>
-        ) : (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-2.5">
-            <p className="text-sm text-destructive/80">{t("delete_confirm")}</p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => deleteMutation.mutate({ id })}
-                disabled={deleteMutation.isPending}
-                className="flex-1 py-1.5 rounded-md bg-destructive text-destructive-foreground text-sm font-semibold hover:bg-destructive/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
-              >
-                {deleteMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                {t("delete_confirm_button")}
-              </button>
-              <button
-                onClick={() => setConfirmDelete(false)}
-                className="flex-1 py-1.5 rounded-md border border-border text-sm font-medium hover:bg-muted transition-colors"
-              >
-                {t("delete_cancel")}
-              </button>
-            </div>
-          </div>
-        )}
+        <button
+          onClick={() => setConfirmDelete(true)}
+          className="flex items-center gap-2 text-sm text-destructive/60 hover:text-destructive transition-colors"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+          {t("delete_restaurant")}
+        </button>
       </div>
+
+      <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("delete_restaurant")}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">{t("delete_confirm")}</p>
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(false)}
+              className="flex-1 py-1.5 rounded-md border border-border text-sm font-medium hover:bg-muted transition-colors"
+            >
+              {t("delete_cancel")}
+            </button>
+            <button
+              type="button"
+              onClick={() => deleteMutation.mutate({ id })}
+              disabled={deleteMutation.isPending}
+              className="flex-1 py-1.5 rounded-md bg-destructive text-destructive-foreground text-sm font-semibold hover:bg-destructive/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              {deleteMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              {t("delete_confirm_button")}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <GlassCircleButton
         side="right"

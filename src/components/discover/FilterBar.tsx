@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Ban, Search, Star, X } from "lucide-react";
-import { TAG_COLORS, colorHex } from "@/lib/colors";
+import { TAG_COLORS, colorHex, STAR_COLOR_CLASS } from "@/lib/colors";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
@@ -292,7 +292,7 @@ export function FilterBar({ filters, onChange, hasLocation, availableColors, ava
                             </span>
                             {rating != null && (
                               <span className="mt-0.5 flex shrink-0 items-center gap-0.5 text-xs text-muted-foreground">
-                                <Star className="w-3 h-3 fill-current text-amber-500" />
+                                <Star className={cn("w-3 h-3 fill-current", STAR_COLOR_CLASS)} />
                                 {rating}
                               </span>
                             )}

@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { useTranslation } from "@/lib/i18n";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { cn } from "@/lib/utils";
+import { STAR_COLOR_CLASS } from "@/lib/colors";
 import { bilingualName } from "@/lib/restaurant-name";
 
 function extractUrl(text: string): string {
@@ -235,7 +236,7 @@ export function ImportDialog({ renderTrigger, iconOnly }: ImportDialogProps = {}
                             <Loader2 className="mt-0.5 w-4 h-4 shrink-0 animate-spin text-muted-foreground" />
                           ) : r.rating != null ? (
                             <span className="mt-0.5 flex shrink-0 items-center gap-0.5 text-xs text-muted-foreground">
-                              <Star className="w-3 h-3 fill-current text-amber-500" />
+                              <Star className={cn("w-3 h-3 fill-current", STAR_COLOR_CLASS)} />
                               {r.rating}
                             </span>
                           ) : null}

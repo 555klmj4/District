@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { trpc } from "@/client/trpc";
 import { TAG_COLORS, sortColorTags } from "@/lib/colors";
 import type { TagColor } from "@/lib/colors";
@@ -32,9 +33,10 @@ export function ColorPicker({ restaurantId, activeTags, className }: ColorPicker
       setOptimisticTags(newTags);
       setColorTagOverride(restaurantId, newTags);
     },
-    onError: () => {
+    onError: (err) => {
       setOptimisticTags(activeTags);
       setColorTagOverride(restaurantId, activeTags);
+      toast.error(err.message ?? "Failed to update color tag");
     },
     onSuccess: () => {
       void utils.restaurants.list.invalidate();
