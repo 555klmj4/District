@@ -24,5 +24,6 @@ export interface ScoreBreakdown {
   rating: number;    // 0–1
   recency: number;   // 0–1
   feedback: number;  // 0–1
-  total: number;     // weighted sum
+  color: number;     // multiplier applied to total
+  total: number;     // weighted sum × color multiplier
 }

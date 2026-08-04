@@ -3,12 +3,24 @@ import type { RecommendationContext, ScoredCandidate } from "@/shared/types/reco
 import type { CuisineAffinity, ScoreBreakdown } from "@/shared/types/preferences";
 
 const WEIGHTS = {
-  affinity: 0.30,
-  distance: 0.25,
+  affinity: 0.28,
+  distance: 0.22,
   rating:   0.20,
   recency:  0.10,
   feedback: 0.15,
+  color:    0.05,
 } as const;
+
+// Color multipliers applied to the weighted sum
+const COLOR_MULTIPLIERS: Record<string, number> = {
+  green:  1.30,
+  blue:   1.10,
+  purple: 1.10,
+  yellow: 1.05,
+  orange: 1.15,
+  red:    1.05,
+  grey:   0.50,
+};
 
 type Candidate = {
   id: string;
@@ -71,12 +83,17 @@ export function scoreRestaurants(input: EngineInput): EngineOutput {
     const recency = scoreRecency(candidate.bookmark_created_at, now);
     const feedback = scoreFeedback(candidate.id, feedback_history, now);
 
-    const total =
+    const colorTags = (candidate.color_tags as string[] | undefined) ?? [];
+    const colorMultiplier = computeColorMultiplier(colorTags);
+
+    const base =
       affinity  * WEIGHTS.affinity +
       distance  * WEIGHTS.distance +
       rating    * WEIGHTS.rating +
       recency   * WEIGHTS.recency +
       feedback  * WEIGHTS.feedback;
+
+    const total = base * colorMultiplier;
 
     const score_breakdown: ScoreBreakdown = {
       affinity,
@@ -84,6 +101,7 @@ export function scoreRestaurants(input: EngineInput): EngineOutput {
       rating,
       recency,
       feedback,
+      color: colorMultiplier,
       total,
     };
 
@@ -150,6 +168,12 @@ function scoreRating(
   if (sources.length === 0) return 0.4; // default if no ratings
   const totalWeight = sources.reduce((s, x) => s + x.weight, 0);
   return sources.reduce((s, x) => s + x.rating * x.weight, 0) / totalWeight;
+}
+
+function computeColorMultiplier(colorTags: string[]): number {
+  if (colorTags.length === 0) return 1.0;
+  const avg = colorTags.reduce((sum, c) => sum + (COLOR_MULTIPLIERS[c] ?? 1.0), 0) / colorTags.length;
+  return avg;
 }
 
 function scoreRecency(bookmarkedAt: Date, now: Date): number {

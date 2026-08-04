@@ -1,11 +1,11 @@
 import { eq } from "drizzle-orm";
-import { router, publicProcedure } from "../init";
+import { router, authedProcedure } from "../init";
 import { userPreferences, bookmarks, restaurants } from "@/server/db/schema";
 import { PreferencesUpdateInput } from "@/shared/validators/recommendation";
 import { extractSignals } from "@/server/recommendation/signals";
 
 export const preferencesRouter = router({
-  get: publicProcedure.query(async ({ ctx }) => {
+  get: authedProcedure.query(async ({ ctx }) => {
     const { userId, db } = ctx;
 
     const rows = await db
@@ -25,7 +25,7 @@ export const preferencesRouter = router({
     return created!;
   }),
 
-  update: publicProcedure
+  update: authedProcedure
     .input(PreferencesUpdateInput)
     .mutation(async ({ ctx, input }) => {
       const { userId, db } = ctx;
@@ -50,7 +50,7 @@ export const preferencesRouter = router({
       return row!;
     }),
 
-  recompute: publicProcedure.mutation(async ({ ctx }) => {
+  recompute: authedProcedure.mutation(async ({ ctx }) => {
     const { userId, db } = ctx;
 
     const bookmarkRows = await db

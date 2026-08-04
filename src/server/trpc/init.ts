@@ -3,12 +3,13 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 import { db } from "@/server/db";
+import { getSessionUserIdFromHeaders } from "@/lib/auth";
 
 export const createTRPCContext = async (opts: { headers: Headers }) => {
+  const userId = await getSessionUserIdFromHeaders(opts.headers);
   return {
     db,
-    // V1: static user. V2: extract from session cookie here.
-    userId: "default" as const,
+    userId,
     headers: opts.headers,
   };
 };
@@ -33,4 +34,12 @@ const t = initTRPC.context<Context>().create({
 
 export const router = t.router;
 export const publicProcedure = t.procedure;
+export const createCallerFactory = t.createCallerFactory;
 export { TRPCError };
+
+export const authedProcedure = t.procedure.use(({ ctx, next }) => {
+  if (!ctx.userId) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  return next({ ctx: { ...ctx, userId: ctx.userId } });
+});

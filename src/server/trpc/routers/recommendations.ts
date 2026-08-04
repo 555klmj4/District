@@ -1,44 +1,52 @@
 import { z } from "zod";
-import { eq, desc } from "drizzle-orm";
-import { router, publicProcedure, TRPCError } from "../init";
+import { eq, and, gte, desc } from "drizzle-orm";
+import { router, authedProcedure, TRPCError } from "../init";
 import {
-  bookmarks,
   restaurants,
   userPreferences,
   recommendationHistory,
   recommendationFeedback,
+  restaurantColorTags,
 } from "@/server/db/schema";
 import { RecommendationInput } from "@/shared/validators/recommendation";
 import { scoreRestaurants } from "@/server/recommendation/engine";
 import { generateExplanation } from "@/server/recommendation/explainer";
 import { isOpenNow, haversineKm } from "@/server/geo/utils";
+import { sortColorTags } from "@/lib/colors";
 import type { RecommendationContext } from "@/shared/types/recommendation";
 
 export const recommendationsRouter = router({
-  generate: publicProcedure
+  generate: authedProcedure
     .input(RecommendationInput)
     .mutation(async ({ ctx, input }) => {
       const { userId, db } = ctx;
 
-      // Require a minimum number of bookmarks
-      const bookmarkCount = await db
-        .select({ id: bookmarks.id })
-        .from(bookmarks)
-        .where(eq(bookmarks.user_id, userId));
+      // Fetch all restaurants as candidates
+      const candidateRows = await db
+        .select()
+        .from(restaurants)
+        .where(eq(restaurants.user_id, userId));
 
-      if (bookmarkCount.length < 3) {
+      if (candidateRows.length < 3) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
-          message: "Save at least 3 restaurants to unlock recommendations.",
+          message: "Add at least 3 restaurants to unlock recommendations.",
         });
       }
 
-      // Fetch all bookmarked restaurants as candidates
-      const candidateRows = await db
-        .select({ bookmark: bookmarks, restaurant: restaurants })
-        .from(bookmarks)
-        .innerJoin(restaurants, eq(bookmarks.restaurant_id, restaurants.id))
-        .where(eq(bookmarks.user_id, userId));
+      // Fetch color tags for all candidates
+      const colorTagRows = await db
+        .select({ restaurant_id: restaurantColorTags.restaurant_id, color: restaurantColorTags.color })
+        .from(restaurantColorTags)
+        .innerJoin(restaurants, eq(restaurantColorTags.restaurant_id, restaurants.id))
+        .where(eq(restaurants.user_id, userId));
+
+      const colorTagsMap = new Map<string, string[]>();
+      for (const row of colorTagRows) {
+        const existing = colorTagsMap.get(row.restaurant_id) ?? [];
+        existing.push(row.color);
+        colorTagsMap.set(row.restaurant_id, existing);
+      }
 
       // Fetch preferences
       const prefRows = await db
@@ -53,7 +61,12 @@ export const recommendationsRouter = router({
       const feedbackRows = await db
         .select()
         .from(recommendationFeedback)
-        .where(eq(recommendationFeedback.user_id, userId));
+        .where(
+          and(
+            eq(recommendationFeedback.user_id, userId),
+            gte(recommendationFeedback.created_at, since)
+          )
+        );
 
       // Build context
       const context: RecommendationContext = {
@@ -71,7 +84,7 @@ export const recommendationsRouter = router({
       };
 
       // Build restaurant list with computed fields for engine
-      const restaurantList = candidateRows.map(({ restaurant, bookmark }) => {
+      const restaurantList = candidateRows.map((restaurant) => {
         const distKm =
           input.lat != null && input.lng != null && restaurant.lat != null && restaurant.lng != null
             ? haversineKm(
@@ -86,8 +99,9 @@ export const recommendationsRouter = router({
           ...restaurant,
           distance_km: distKm ?? undefined,
           is_open_now: restaurant.hours ? isOpenNow(restaurant.hours, input.timezone) : undefined,
-          bookmark_created_at: bookmark.created_at,
-          personal_rating: bookmark.personal_rating,
+          bookmark_created_at: restaurant.created_at,
+          personal_rating: null,
+          color_tags: sortColorTags(colorTagsMap.get(restaurant.id) ?? []),
         };
       });
 
@@ -105,6 +119,31 @@ export const recommendationsRouter = router({
         filtered = filtered.filter((r) =>
           r.cuisine_primary?.toLowerCase().includes(input.cuisine!.toLowerCase())
         );
+      }
+
+      // Soft filter: if the user typed a free-text query, try to match it against
+      // restaurant name / cuisine / tags. Only apply if it produces ≥1 result.
+      if (input.query && !input.cuisine) {
+        const keywords = input.query
+          .toLowerCase()
+          .split(/\s+/)
+          .filter((w) => w.length > 2);
+        if (keywords.length > 0) {
+          const queryMatched = filtered.filter((r) => {
+            const haystack = [
+              r.name,
+              r.name_zh,
+              r.cuisine_primary,
+              r.cuisine_primary_zh,
+              ...((r.cuisine_tags as string[] | null) ?? []),
+            ]
+              .filter(Boolean)
+              .join(" ")
+              .toLowerCase();
+            return keywords.some((kw) => haystack.includes(kw));
+          });
+          if (queryMatched.length > 0) filtered = queryMatched;
+        }
       }
 
       if (filtered.length === 0) {
@@ -165,7 +204,7 @@ export const recommendationsRouter = router({
       };
     }),
 
-  getHistory: publicProcedure
+  getHistory: authedProcedure
     .input(z.object({ limit: z.number().int().min(1).max(20).default(10) }))
     .query(async ({ ctx, input }) => {
       const { userId, db } = ctx;

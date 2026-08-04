@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { router, publicProcedure, TRPCError } from "../init";
+import { router, authedProcedure, TRPCError } from "../init";
 import {
   recommendationFeedback,
   recommendationHistory,
@@ -11,7 +11,7 @@ import { FeedbackInput } from "@/shared/validators/recommendation";
 import { extractSignals } from "@/server/recommendation/signals";
 
 export const feedbackRouter = router({
-  submit: publicProcedure
+  submit: authedProcedure
     .input(FeedbackInput)
     .mutation(async ({ ctx, input }) => {
       const { userId, db } = ctx;

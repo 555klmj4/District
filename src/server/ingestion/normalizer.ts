@@ -1,6 +1,7 @@
 import "server-only";
 import type { PlaceResult } from "./googlePlaces";
 import type { WeeklyHours, DayHours, Category } from "@/shared/types/restaurant";
+import { districtEn } from "@/lib/district-zh";
 
 // Google's priceLevel enum values
 const PRICE_LEVEL_MAP: Record<string, number> = {
@@ -9,6 +10,35 @@ const PRICE_LEVEL_MAP: Record<string, number> = {
   PRICE_LEVEL_MODERATE:    2,
   PRICE_LEVEL_EXPENSIVE:   3,
   PRICE_LEVEL_VERY_EXPENSIVE: 4,
+};
+
+const TYPE_TO_CUISINE_ZH: Record<string, string> = {
+  japanese_restaurant:      "日本料理",
+  chinese_restaurant:       "中式料理",
+  korean_restaurant:        "韓國料理",
+  thai_restaurant:          "泰國料理",
+  vietnamese_restaurant:    "越南料理",
+  italian_restaurant:       "意大利菜",
+  french_restaurant:        "法國菜",
+  american_restaurant:      "美式料理",
+  mexican_restaurant:       "墨西哥菜",
+  indian_restaurant:        "印度料理",
+  mediterranean_restaurant: "地中海料理",
+  seafood_restaurant:       "海鮮料理",
+  steak_house:              "牛排",
+  pizza_restaurant:         "披薩",
+  sushi_restaurant:         "壽司",
+  ramen_restaurant:         "拉麵",
+  dim_sum_restaurant:       "點心",
+  hong_kong_restaurant:     "港式料理",
+  cantonese_restaurant:     "粵菜",
+  bar:                      "酒吧",
+  wine_bar:                 "葡萄酒吧",
+  cocktail_bar:             "雞尾酒吧",
+  pub:                      "英式酒吧",
+  cafe:                     "咖啡廳",
+  coffee_shop:              "咖啡廳",
+  bakery:                   "麵包店",
 };
 
 // Maps Google place types to cuisine labels
@@ -73,9 +103,13 @@ export interface NormalizedPlace {
   rating_count_google: number | null;
   rating_aggregate: string | null;
   google_place_id: string;
+  name_zh: string | null;
+  address_zh: string | null;
+  district_zh: string | null;
+  cuisine_primary_zh: string | null;
 }
 
-export function normalizePlace(place: PlaceResult): NormalizedPlace {
+export function normalizePlace(place: PlaceResult, placeZh?: PlaceResult | null): NormalizedPlace {
   const types = place.types ?? [];
   const cuisinePrimary = inferCuisine(place.primaryTypeDisplayName?.text, types);
   const cuisineTags = inferAllCuisines(types);
@@ -84,6 +118,10 @@ export function normalizePlace(place: PlaceResult): NormalizedPlace {
   const { district, city, country } = extractAddressParts(
     place.addressComponents ?? []
   );
+
+  const { district: districtZh } = placeZh
+    ? extractAddressParts(placeZh.addressComponents ?? [])
+    : { district: null };
 
   const rating =
     place.rating != null ? place.rating.toFixed(1) : null;
@@ -107,7 +145,17 @@ export function normalizePlace(place: PlaceResult): NormalizedPlace {
     lng: place.location.longitude.toFixed(7),
     phone: place.nationalPhoneNumber ?? null,
     website: place.websiteUri ?? null,
-    price_level: place.priceLevel ? (PRICE_LEVEL_MAP[place.priceLevel] ?? null) : null,
+    price_level: (() => {
+      if (place.priceLevel && PRICE_LEVEL_MAP[place.priceLevel]) {
+        return PRICE_LEVEL_MAP[place.priceLevel]!;
+      }
+      const start = parseInt((place.priceRange as { startPrice?: { units?: string } } | undefined)?.startPrice?.units ?? "0");
+      if (start <= 0) return null;
+      if (start < 150) return 1;
+      if (start < 400) return 2;
+      if (start < 800) return 3;
+      return 4;
+    })(),
     cuisine_primary: cuisinePrimary,
     cuisine_tags: cuisineTags,
     hours: normalizeHours(place.regularOpeningHours ?? null),
@@ -116,6 +164,10 @@ export function normalizePlace(place: PlaceResult): NormalizedPlace {
     rating_count_google: place.userRatingCount ?? null,
     rating_aggregate: aggregate,
     google_place_id: place.id,
+    name_zh: placeZh?.displayName.text ?? null,
+    address_zh: placeZh?.formattedAddress ?? null,
+    district_zh: districtZh ?? null,
+    cuisine_primary_zh: inferCuisineZh(placeZh?.primaryTypeDisplayName?.text, types),
   };
 }
 
@@ -156,9 +208,24 @@ function inferCuisine(
   primaryType: string | undefined,
   types: string[]
 ): string | null {
-  if (primaryType) return primaryType;
+  // Type-based map first → canonical short names (e.g. "ramen_restaurant" → "Japanese")
   for (const t of types) {
     const mapped = TYPE_TO_CUISINE[t];
+    if (mapped) return mapped;
+  }
+  // Fall back to Google's display name only when no type mapping exists
+  if (primaryType) return primaryType;
+  return null;
+}
+
+function hasChinese(s?: string | null): s is string {
+  return s != null && /[一-鿿㐀-䶿]/.test(s);
+}
+
+function inferCuisineZh(googleZhText: string | undefined, types: string[]): string | null {
+  if (hasChinese(googleZhText)) return googleZhText;
+  for (const t of types) {
+    const mapped = TYPE_TO_CUISINE_ZH[t];
     if (mapped) return mapped;
   }
   return null;
@@ -206,22 +273,29 @@ function normalizeHours(
 function extractAddressParts(
   components: NonNullable<PlaceResult["addressComponents"]>
 ): { district: string | null; city: string | null; country: string | null } {
-  let district: string | null = null;
-  let city: string | null = null;
-  let country: string | null = null;
+  const byType: Record<string, string> = {};
 
   for (const c of components) {
-    const types = c.types ?? [];
-    if (types.includes("sublocality_level_1") || types.includes("neighborhood")) {
-      district ??= c.longText;
-    }
-    if (types.includes("locality") || types.includes("postal_town")) {
-      city ??= c.longText;
-    }
-    if (types.includes("country")) {
-      country ??= c.longText;
+    for (const type of (c.types ?? [])) {
+      byType[type] ??= c.longText;
     }
   }
+
+  // For HK addresses: neighborhood is the specific area name (e.g. "Sheung Wan"),
+  // while sublocality_level_1 is the administrative district (e.g. "Western District").
+  // Prefer the most-specific level so grouping uses the neighbourhood name.
+  // Google sometimes returns Chinese characters even for English-locale queries in HK;
+  // fall back to our reverse-lookup map to get the English equivalent.
+  const rawDistrict =
+    byType["neighborhood"] ??
+    byType["sublocality_level_2"] ??
+    byType["sublocality_level_1"] ??
+    null;
+  const hasCjk = rawDistrict != null && /[一-鿿]/.test(rawDistrict);
+  const district = hasCjk ? (districtEn(rawDistrict) ?? rawDistrict) : rawDistrict;
+
+  const city    = byType["locality"] ?? byType["postal_town"] ?? null;
+  const country = byType["country"] ?? null;
 
   return { district, city, country };
 }

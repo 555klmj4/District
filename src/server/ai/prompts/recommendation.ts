@@ -60,5 +60,5 @@ User's taste profile:
 Top-ranked recommendations:
 ${candidateList}
 
-In 2-3 sentences, explain why these restaurants match this user's preferences. Be specific — mention cuisine patterns, location convenience, or time-of-day habits if relevant. Do not list or repeat the restaurant names. Write in second person ("You tend to…", "These match your…").`;
+In 2-3 sentences, explain why these restaurants fit the user's request. If the user asked for something specific (e.g. a cuisine or mood), acknowledge that and explain how the results match. Also mention any relevant patterns — rating, location, or time-of-day — if applicable. Do not list or repeat the restaurant names. Write in second person ("You asked for…", "These match your…").`;
 }

@@ -3,7 +3,7 @@ import { RecommendationChat } from "@/components/recommendation/RecommendationCh
 
 export default function RecommendPage() {
   return (
-    <PageShell titleKey="page_recommend">
+    <PageShell>
       <div className="pt-4">
         <RecommendationChat />
       </div>

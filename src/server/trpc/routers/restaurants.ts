@@ -1,15 +1,16 @@
 import { z } from "zod";
-import { eq, and, ilike, or, desc, asc, sql, isNotNull } from "drizzle-orm";
-import { router, publicProcedure, TRPCError } from "../init";
-import { restaurants, bookmarks, restaurantSources } from "@/server/db/schema";
+import { eq, and, ilike, or, desc, asc, sql, inArray } from "drizzle-orm";
+import { router, authedProcedure, TRPCError } from "../init";
+import { restaurants, bookmarks, restaurantSources, restaurantColorTags, activityLog } from "@/server/db/schema";
 import {
   RestaurantListInput,
   RestaurantSearchInput,
 } from "@/shared/validators/restaurant";
 import { isOpenNow } from "@/server/geo/utils";
+import { sortColorTags } from "@/lib/colors";
 
 export const restaurantsRouter = router({
-  list: publicProcedure.input(RestaurantListInput).query(async ({ ctx, input }) => {
+  list: authedProcedure.input(RestaurantListInput).query(async ({ ctx, input }) => {
     const { userId, db } = ctx;
     const {
       search,
@@ -55,7 +56,7 @@ export const restaurantsRouter = router({
       conditions.push(
         sql`EXISTS (
           SELECT 1 FROM bookmarks b
-          WHERE b.restaurant_id = ${restaurants.id}
+          WHERE b.restaurant_id = "restaurants"."id"
           AND b.user_id = ${userId}
         )`
       );
@@ -96,12 +97,49 @@ export const restaurantsRouter = router({
 
     const rows = await db
       .select({
-        restaurant: restaurants,
+        restaurant: {
+          id: restaurants.id,
+          name: restaurants.name,
+          name_zh: restaurants.name_zh,
+          cuisine_primary: restaurants.cuisine_primary,
+          cuisine_primary_zh: restaurants.cuisine_primary_zh,
+          cuisine_category: restaurants.cuisine_category,
+          district: restaurants.district,
+          district_zh: restaurants.district_zh,
+          price_level: restaurants.price_level,
+          rating_aggregate: restaurants.rating_aggregate,
+          rating_google: restaurants.rating_google,
+          rating_openrice: restaurants.rating_openrice,
+          lat: restaurants.lat,
+          lng: restaurants.lng,
+          // Not returned to the client — used only to compute is_open_now below.
+          hours: restaurants.hours,
+          signature_dishes: restaurants.signature_dishes,
+          google_place_id: restaurants.google_place_id,
+        },
         is_bookmarked: sql<boolean>`EXISTS (
           SELECT 1 FROM bookmarks b
-          WHERE b.restaurant_id = ${restaurants.id}
+          WHERE b.restaurant_id = "restaurants"."id"
           AND b.user_id = ${userId}
         )`.as("is_bookmarked"),
+        is_starred: sql<boolean>`EXISTS (
+          SELECT 1 FROM restaurant_stars s
+          WHERE s.restaurant_id = "restaurants"."id"
+          AND s.user_id = ${userId}
+        )`.as("is_starred"),
+        bookmark_tags: sql<string[] | null>`(
+          SELECT b.tags FROM bookmarks b
+          WHERE b.restaurant_id = "restaurants"."id"
+          AND b.user_id = ${userId}
+          LIMIT 1
+        )`.as("bookmark_tags"),
+        price_range_data: sql<unknown>`(
+          SELECT raw_data->'priceRange'
+          FROM restaurant_sources
+          WHERE restaurant_id = "restaurants"."id"
+            AND platform = 'google'
+          LIMIT 1
+        )`.as("price_range_data"),
         distance_m:
           lat != null && lng != null
             ? sql<number>`ST_Distance(
@@ -118,12 +156,42 @@ export const restaurantsRouter = router({
     const hasMore = rows.length > limit;
     const items = hasMore ? rows.slice(0, limit) : rows;
 
-    const enriched = items.map(({ restaurant, is_bookmarked, distance_m }) => ({
-      ...restaurant,
-      is_bookmarked,
-      distance_km: distance_m != null ? distance_m / 1000 : undefined,
-      is_open_now: restaurant.hours ? isOpenNow(restaurant.hours, timezone) : undefined,
-    }));
+    // Colour tags: separate query — enum arrays don't parse reliably from correlated subqueries
+    const restaurantIds = items.map((r) => r.restaurant.id);
+    const colorTagsMap = new Map<string, string[]>();
+    if (restaurantIds.length > 0) {
+      const ctRows = await db
+        .select({ restaurant_id: restaurantColorTags.restaurant_id, color: restaurantColorTags.color })
+        .from(restaurantColorTags)
+        .where(inArray(restaurantColorTags.restaurant_id, restaurantIds));
+      for (const row of ctRows) {
+        const arr = colorTagsMap.get(row.restaurant_id) ?? [];
+        arr.push(row.color);
+        colorTagsMap.set(row.restaurant_id, arr);
+      }
+    }
+
+    const enriched = items.map(({ restaurant, is_bookmarked, is_starred, bookmark_tags, price_range_data, distance_m }) => {
+      const pr = price_range_data as { startPrice?: { currencyCode?: string; units?: string }; endPrice?: { units?: string } } | null | undefined;
+      let price_range_str: string | null = null;
+      if (pr?.startPrice?.units) {
+        const currency = pr.startPrice.currencyCode ?? "";
+        const start = pr.startPrice.units;
+        const end = pr.endPrice?.units;
+        price_range_str = end && end !== start ? `${currency} ${start}–${end}` : `${currency} ${start}+`;
+      }
+      const { hours, ...restaurantFields } = restaurant;
+      return {
+        ...restaurantFields,
+        is_bookmarked,
+        is_starred,
+        bookmark_tags: (bookmark_tags as string[] | null) ?? [],
+        color_tags: sortColorTags(colorTagsMap.get(restaurant.id) ?? []),
+        price_range_str,
+        distance_km: distance_m != null ? distance_m / 1000 : undefined,
+        is_open_now: hours ? isOpenNow(hours, timezone) : undefined,
+      };
+    });
 
     if (open_now) {
       return {
@@ -138,7 +206,7 @@ export const restaurantsRouter = router({
     };
   }),
 
-  getById: publicProcedure
+  getById: authedProcedure
     .input(z.object({ id: z.string().uuid(), timezone: z.string().optional() }))
     .query(async ({ ctx, input }) => {
       const { userId, db } = ctx;
@@ -148,9 +216,20 @@ export const restaurantsRouter = router({
           restaurant: restaurants,
           is_bookmarked: sql<boolean>`EXISTS (
             SELECT 1 FROM bookmarks b
-            WHERE b.restaurant_id = ${restaurants.id}
+            WHERE b.restaurant_id = "restaurants"."id"
             AND b.user_id = ${userId}
           )`.as("is_bookmarked"),
+          is_starred: sql<boolean>`EXISTS (
+            SELECT 1 FROM restaurant_stars s
+            WHERE s.restaurant_id = "restaurants"."id"
+            AND s.user_id = ${userId}
+          )`.as("is_starred"),
+          bookmark_tags: sql<string[] | null>`(
+            SELECT b.tags FROM bookmarks b
+            WHERE b.restaurant_id = "restaurants"."id"
+            AND b.user_id = ${userId}
+            LIMIT 1
+          )`.as("bookmark_tags"),
         })
         .from(restaurants)
         .where(
@@ -162,25 +241,79 @@ export const restaurantsRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Restaurant not found" });
       }
 
-      const sources = await db
-        .select()
-        .from(restaurantSources)
-        .where(eq(restaurantSources.restaurant_id, input.id));
+      const [sources, ctRows] = await Promise.all([
+        // raw_data holds the full upstream API response (Google reviews with
+        // full text + author attribution, etc.) — only these four sub-fields
+        // are ever read client-side (RestaurantDetail.tsx), so reconstruct a
+        // trimmed raw_data instead of shipping the whole blob to the client.
+        db
+          .select({
+            id: restaurantSources.id,
+            platform: restaurantSources.platform,
+            url: restaurantSources.url,
+            created_at: restaurantSources.created_at,
+            raw_data: sql<Record<string, unknown> | null>`jsonb_build_object(
+              'photos', raw_data->'photos',
+              'reservable', raw_data->'reservable',
+              'has_booking', raw_data->'has_booking',
+              'priceRange', raw_data->'priceRange'
+            )`,
+          })
+          .from(restaurantSources)
+          .where(eq(restaurantSources.restaurant_id, input.id)),
+        db.select({ color: restaurantColorTags.color })
+          .from(restaurantColorTags)
+          .where(eq(restaurantColorTags.restaurant_id, input.id)),
+      ]);
 
-      const { restaurant, is_bookmarked } = rows[0]!;
+      const { restaurant, is_bookmarked, is_starred, bookmark_tags } = rows[0]!;
       return {
         ...restaurant,
         is_bookmarked,
+        is_starred,
+        bookmark_tags: (bookmark_tags as string[] | null) ?? [],
+        color_tags: sortColorTags(ctRows.map((r) => r.color)),
         is_open_now: restaurant.hours ? isOpenNow(restaurant.hours, input.timezone) : undefined,
         sources,
       };
     }),
 
-  search: publicProcedure
+  delete: authedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { userId, db } = ctx;
+
+      const deleted = await db.transaction(async (tx) => {
+        const rows = await tx
+          .delete(restaurants)
+          .where(and(eq(restaurants.id, input.id), eq(restaurants.user_id, userId)))
+          .returning({ id: restaurants.id, name: restaurants.name });
+
+        if (rows.length === 0) {
+          return rows;
+        }
+
+        await tx.insert(activityLog).values({
+          user_id: userId,
+          action: "restaurant_removed",
+          restaurant_name: rows[0]!.name,
+        });
+
+        return rows;
+      });
+
+      if (deleted.length === 0) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Restaurant not found" });
+      }
+
+      return { id: deleted[0]!.id };
+    }),
+
+  search: authedProcedure
     .input(RestaurantSearchInput)
     .query(async ({ ctx, input }) => {
       const { userId, db } = ctx;
-      const { query, lat, lng } = input;
+      const { query } = input;
 
       const conditions = [
         eq(restaurants.user_id, userId),
@@ -192,26 +325,20 @@ export const restaurantsRouter = router({
         )!,
       ];
 
-      const rows = await db
+      // Only what the search-preview dropdown (FilterBar.tsx) actually
+      // renders — id/name/district (+ zh) and rating.
+      return db
         .select({
-          restaurant: restaurants,
-          distance_m:
-            lat != null && lng != null
-              ? sql<number>`ST_Distance(
-                  ${restaurants.location},
-                  ST_MakePoint(${lng}, ${lat})::geography
-                )`.as("distance_m")
-              : sql<null>`NULL`.as("distance_m"),
+          id: restaurants.id,
+          name: restaurants.name,
+          name_zh: restaurants.name_zh,
+          district: restaurants.district,
+          district_zh: restaurants.district_zh,
+          rating_aggregate: restaurants.rating_aggregate,
         })
         .from(restaurants)
         .where(and(...conditions))
         .orderBy(desc(restaurants.rating_aggregate))
         .limit(20);
-
-      return rows.map(({ restaurant, distance_m }) => ({
-        ...restaurant,
-        distance_km: distance_m != null ? distance_m / 1000 : undefined,
-        is_open_now: restaurant.hours ? isOpenNow(restaurant.hours) : undefined,
-      }));
     }),
 });

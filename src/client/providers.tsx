@@ -19,6 +19,7 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
           queries: {
             staleTime: 30 * 1000, // 30 seconds
             retry: 1,
+            refetchOnWindowFocus: false,
           },
         },
       })

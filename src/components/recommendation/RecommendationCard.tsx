@@ -3,6 +3,7 @@ import { RatingBadge } from "@/components/restaurant/RatingBadge";
 import { StatusIndicator } from "@/components/restaurant/StatusIndicator";
 import { MapLaunchButton } from "@/components/restaurant/MapLaunchButton";
 import { FeedbackButtons } from "./FeedbackButtons";
+import { colorHex } from "@/lib/colors";
 import { cn } from "@/lib/utils";
 import type { ScoredCandidate } from "@/shared/types/recommendation";
 import type { Restaurant } from "@/shared/types/restaurant";
@@ -58,6 +59,13 @@ export function RecommendationCard({
                   : `${r.distance_km.toFixed(1)}km`}
               </span>
             )}
+            {(r.color_tags ?? []).map((c) => (
+              <span
+                key={c}
+                className="w-2.5 h-2.5 rounded-full shrink-0"
+                style={{ backgroundColor: colorHex(c) }}
+              />
+            ))}
           </div>
         </div>
         <span className="text-xs font-semibold bg-primary/10 text-primary rounded-full px-2.5 py-0.5 shrink-0">
@@ -72,7 +80,6 @@ export function RecommendationCard({
           aggregate={r.rating_aggregate}
           google={r.rating_google}
           openrice={r.rating_openrice}
-          yelp={r.rating_yelp}
           compact
         />
       </div>

@@ -1,25 +1,29 @@
 export const en = {
   // Nav
   nav_discover: "Discover",
-  nav_saved: "Saved",
   nav_ai_pick: "AI Pick",
   nav_map: "Map",
 
-  // Page titles
-  page_discover: "🍜 District",
-  page_saved: "🔖 Saved",
-  page_recommend: "✨ AI Recommendations",
-  page_map: "🗺️ Map",
+  // App title
+  app_title: "District",
+
+  // Offline
+  offline_title: "You're offline",
 
   // Discover feed
   loading: "Loading…",
   restaurants_count_one: "restaurant",
   restaurants_count_other: "restaurants",
   no_restaurants_title: "No restaurants yet",
-  no_restaurants_body: "Paste a Google Maps or Yelp link to get started.",
+  no_restaurants_body: "Paste a Google Maps or OpenRice link to get started.",
 
   // Filter bar
+  filters_show: "Show filters",
+  filter_no_color: "No colour",
   search_placeholder: "Search restaurants, cuisines…",
+  search_title: "Search",
+  search_no_results: "No matches found",
+  search_error: "Search failed — try again",
   sort_newest: "Recent",
   sort_rating: "Top rated",
   sort_distance: "Nearest",
@@ -36,14 +40,19 @@ export const en = {
   // Restaurant detail
   not_found: "Restaurant not found.",
   back: "Back",
-  info_section: "ℹ️ Info",
+  added_via: "Added via",
+  info_section: "Info",
   address_label: "Address",
-  hours_section: "🕐 Hours",
-  links_section: "🔗 Links",
+  price_label: "Price",
+  hours_section: "Hours",
+  links_section: "Links",
   reserve_google: "Reserve via Google",
   book_openrice: "Book via OpenRice",
   search_openrice: "Search OpenRice",
   closed_today: "Closed",
+  share_maps_link: "Share Maps link",
+  share_openrice_link: "Share OpenRice link",
+  link_copied: "Copied!",
 
   // Day labels
   day_mon: "Monday",
@@ -62,24 +71,19 @@ export const en = {
   // Map launch
   open_in_maps: "Open in Maps",
 
-  // Bookmarks
-  tab_all: "All",
-  tab_visited: "Visited",
-  tab_wishlist: "Wishlist",
-  bookmarks_empty_all: "No saved restaurants yet. Paste a link to add one.",
-  bookmarks_empty_visited: "Mark restaurants as visited to see them here.",
-  bookmarks_empty_wishlist: "Restaurants you haven't visited yet will appear here.",
-  saved_toast: "Saved to bookmarks",
-  unsaved_toast: "Removed from bookmarks",
-  bookmark_error: "Failed to update bookmark",
-
   // Import dialog
   add_restaurant: "Add Restaurant",
-  import_description: "Paste a Google Maps, OpenRice, or Yelp link to import and bookmark a restaurant.",
+  import_description: "Paste a Google Maps or OpenRice link to import a restaurant.",
   import_placeholder: "https://maps.google.com/...",
   import_button: "Import",
   import_success: "Successfully imported!",
-  import_supported: "Supported: Google Maps links, OpenRice pages, Yelp business pages",
+  import_supported: "Supported: Google Maps links, OpenRice pages",
+  import_tab_link: "Paste a link",
+  import_tab_search: "Search by name",
+  import_search_description: "Search for a restaurant by name to import it.",
+  import_search_placeholder: "Restaurant name…",
+  import_search_no_results: "No matches found",
+  import_search_error: "Search failed — try again",
 
   // Recommendation
   query_placeholder: 'What are you feeling? (e.g. "something cozy for tonight")',
@@ -101,30 +105,65 @@ export const en = {
   // Language toggle
   lang_en: "English",
   lang_zh: "繁體中文",
+
+  // Signature dishes
+  known_for: "Known for",
+
+  // Delete
+  delete_restaurant: "Delete Restaurant",
+  delete_confirm: "This will permanently remove the restaurant and all its data.",
+  delete_confirm_button: "Yes, delete",
+  delete_cancel: "Cancel",
+  delete_success: "Restaurant deleted",
+  delete_error: "Failed to delete restaurant",
+  undo: "Undo",
+
+  // History
+  nav_history: "History",
+  history_title: "History",
+  history_empty_title: "No activity yet",
+  history_empty_body: "Changes you make will show up here.",
+  history_verb_added: "Added",
+  history_verb_removed: "Removed",
+  history_verb_color_added: "Added color tag to",
+  history_verb_color_removed: "Removed color tag from",
+  history_verb_starred: "Starred",
+  history_verb_unstarred: "Unstarred",
+
+  // Starred
+  starred_section_title: "Starred",
+  star_restaurant: "Star restaurant",
+  unstar_restaurant: "Unstar restaurant",
+  star_added_toast: "Added to Starred",
+  star_removed_toast: "Removed from Starred",
 } as const;
 
 export const zhTW: Record<keyof typeof en, string> = {
   // Nav
   nav_discover: "探索",
-  nav_saved: "收藏",
   nav_ai_pick: "AI 推薦",
   nav_map: "地圖",
 
-  // Page titles
-  page_discover: "🍜 District",
-  page_saved: "🔖 收藏",
-  page_recommend: "✨ AI 推薦",
-  page_map: "🗺️ 地圖",
+  // App title
+  app_title: "District",
+
+  // Offline
+  offline_title: "您已離線",
 
   // Discover feed
   loading: "載入中…",
   restaurants_count_one: "間餐廳",
   restaurants_count_other: "間餐廳",
   no_restaurants_title: "尚無餐廳",
-  no_restaurants_body: "貼上 Google Maps 或 Yelp 連結以開始。",
+  no_restaurants_body: "貼上 Google Maps 或 OpenRice 連結以開始。",
 
   // Filter bar
+  filters_show: "顯示篩選",
+  filter_no_color: "無顏色",
   search_placeholder: "搜尋餐廳、料理…",
+  search_title: "搜尋",
+  search_no_results: "找不到相符結果",
+  search_error: "搜尋失敗，請重試",
   sort_newest: "最新",
   sort_rating: "最高評分",
   sort_distance: "最近距離",
@@ -141,14 +180,19 @@ export const zhTW: Record<keyof typeof en, string> = {
   // Restaurant detail
   not_found: "找不到餐廳。",
   back: "返回",
-  info_section: "ℹ️ 資訊",
+  added_via: "透過",
+  info_section: "資訊",
   address_label: "地址",
-  hours_section: "🕐 營業時間",
-  links_section: "🔗 相關連結",
+  price_label: "價格",
+  hours_section: "開放時間",
+  links_section: "相關連結",
   reserve_google: "透過 Google 訂位",
   book_openrice: "透過 OpenRice 訂位",
   search_openrice: "搜尋 OpenRice",
   closed_today: "休息",
+  share_maps_link: "分享 Maps 連結",
+  share_openrice_link: "分享 OpenRice 連結",
+  link_copied: "已複製！",
 
   // Day labels
   day_mon: "星期一",
@@ -167,24 +211,19 @@ export const zhTW: Record<keyof typeof en, string> = {
   // Map launch
   open_in_maps: "在地圖中開啟",
 
-  // Bookmarks
-  tab_all: "全部",
-  tab_visited: "已去過",
-  tab_wishlist: "心願清單",
-  bookmarks_empty_all: "尚未收藏餐廳。貼上連結以新增。",
-  bookmarks_empty_visited: "將餐廳標記為已去過後，即可在此查看。",
-  bookmarks_empty_wishlist: "尚未去過的餐廳將顯示在此。",
-  saved_toast: "已加入收藏",
-  unsaved_toast: "已從收藏移除",
-  bookmark_error: "更新收藏失敗",
-
   // Import dialog
   add_restaurant: "新增餐廳",
-  import_description: "貼上 Google Maps、OpenRice 或 Yelp 連結以匯入並收藏餐廳。",
+  import_description: "貼上 Google Maps 或 OpenRice 連結以匯入餐廳。",
   import_placeholder: "https://maps.google.com/...",
   import_button: "匯入",
   import_success: "匯入成功！",
-  import_supported: "支援：Google Maps 連結、OpenRice 頁面、Yelp 商家頁面",
+  import_supported: "支援：Google Maps 連結、OpenRice 頁面",
+  import_tab_link: "貼上連結",
+  import_tab_search: "搜尋名稱",
+  import_search_description: "搜尋餐廳名稱以匯入。",
+  import_search_placeholder: "餐廳名稱…",
+  import_search_no_results: "找不到相符結果",
+  import_search_error: "搜尋失敗，請重試",
 
   // Recommendation
   query_placeholder: "想吃什麼？（例如：今晚想吃暖胃的東西）",
@@ -206,4 +245,35 @@ export const zhTW: Record<keyof typeof en, string> = {
   // Language toggle
   lang_en: "English",
   lang_zh: "繁體中文",
+
+  // Signature dishes
+  known_for: "招牌菜",
+
+  // Delete
+  delete_restaurant: "刪除餐廳",
+  delete_confirm: "此操作將永久移除餐廳及所有相關資料。",
+  delete_confirm_button: "確認刪除",
+  delete_cancel: "取消",
+  delete_success: "餐廳已刪除",
+  delete_error: "刪除失敗",
+  undo: "復原",
+
+  // History
+  nav_history: "紀錄",
+  history_title: "變更紀錄",
+  history_empty_title: "尚無紀錄",
+  history_empty_body: "您所做的變更將會顯示於此。",
+  history_verb_added: "新增了",
+  history_verb_removed: "刪除了",
+  history_verb_color_added: "新增顏色標籤於",
+  history_verb_color_removed: "移除顏色標籤於",
+  history_verb_starred: "加了星號",
+  history_verb_unstarred: "移除了星號",
+
+  // Starred
+  starred_section_title: "已加星號",
+  star_restaurant: "加星號",
+  unstar_restaurant: "移除星號",
+  star_added_toast: "已加入星號",
+  star_removed_toast: "已移除星號",
 };

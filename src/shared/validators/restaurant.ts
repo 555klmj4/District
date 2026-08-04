@@ -12,7 +12,7 @@ export const RestaurantListInput = z.object({
   sort: z.enum(["distance", "rating", "newest", "name"]).optional(),
   bookmarked_only: z.boolean().optional(),
   cursor: z.string().uuid().optional(),
-  limit: z.number().int().min(1).max(50).default(20),
+  limit: z.number().int().min(1).max(500).default(20),
 });
 export type RestaurantListInput = z.infer<typeof RestaurantListInput>;
 

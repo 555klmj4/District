@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { eq, and, desc, asc, ilike } from "drizzle-orm";
-import { router, publicProcedure, TRPCError } from "../init";
+import { router, authedProcedure, TRPCError } from "../init";
 import { bookmarks, restaurants } from "@/server/db/schema";
 import {
   BookmarkToggleInput,
@@ -10,7 +10,7 @@ import {
 import { isOpenNow } from "@/server/geo/utils";
 
 export const bookmarksRouter = router({
-  list: publicProcedure
+  list: authedProcedure
     .input(BookmarkListInput)
     .query(async ({ ctx, input }) => {
       const { userId, db } = ctx;
@@ -67,7 +67,7 @@ export const bookmarksRouter = router({
       };
     }),
 
-  toggle: publicProcedure
+  toggle: authedProcedure
     .input(BookmarkToggleInput)
     .mutation(async ({ ctx, input }) => {
       const { userId, db } = ctx;
@@ -97,7 +97,7 @@ export const bookmarksRouter = router({
       return { bookmarked: true };
     }),
 
-  update: publicProcedure
+  update: authedProcedure
     .input(BookmarkUpdateInput)
     .mutation(async ({ ctx, input }) => {
       const { userId, db } = ctx;
@@ -133,7 +133,54 @@ export const bookmarksRouter = router({
       return updated!;
     }),
 
-  delete: publicProcedure
+  setTags: authedProcedure
+    .input(z.object({
+      restaurant_id: z.string().uuid(),
+      tags: z.array(z.string().min(1).max(50)).max(10),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { userId, db } = ctx;
+
+      const existing = await db
+        .select({ id: bookmarks.id })
+        .from(bookmarks)
+        .where(
+          and(
+            eq(bookmarks.user_id, userId),
+            eq(bookmarks.restaurant_id, input.restaurant_id),
+          )
+        )
+        .limit(1);
+
+      console.log("[setTags]", { restaurant_id: input.restaurant_id, tags: input.tags, found: existing.length });
+
+      if (existing.length > 0) {
+        await db
+          .update(bookmarks)
+          .set({ tags: input.tags, updated_at: new Date() })
+          .where(eq(bookmarks.id, existing[0]!.id));
+        console.log("[setTags] updated bookmark", existing[0]!.id);
+      } else {
+        const [inserted] = await db.insert(bookmarks).values({
+          user_id: userId,
+          restaurant_id: input.restaurant_id,
+          tags: input.tags,
+        }).returning({ id: bookmarks.id });
+        console.log("[setTags] inserted bookmark", inserted?.id);
+      }
+
+      // Verify what was actually stored
+      const verify = await db
+        .select({ tags: bookmarks.tags })
+        .from(bookmarks)
+        .where(and(eq(bookmarks.user_id, userId), eq(bookmarks.restaurant_id, input.restaurant_id)))
+        .limit(1);
+      console.log("[setTags] verified tags in DB:", verify[0]?.tags);
+
+      return { success: true as const };
+    }),
+
+  delete: authedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       const { userId, db } = ctx;

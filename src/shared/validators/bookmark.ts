@@ -18,7 +18,7 @@ export const BookmarkListInput = z.object({
   cuisine: z.string().optional(),
   visited: z.boolean().optional(),
   timezone: z.string().optional(),
-  limit: z.number().int().min(1).max(100).default(50),
+  limit: z.number().int().min(1).max(500).default(500),
   cursor: z.string().uuid().optional(),
 });
 export type BookmarkListInput = z.infer<typeof BookmarkListInput>;

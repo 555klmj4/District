@@ -18,12 +18,16 @@ export async function parseAndResolveUrl(rawUrl: string): Promise<ParsedUrl> {
   const needsRedirect =
     rawUrl.includes("goo.gl") ||
     rawUrl.includes("maps.app.goo.gl") ||
-    rawUrl.includes("bit.ly");
+    rawUrl.includes("bit.ly") ||
+    rawUrl.includes("s.openrice.com");
 
   if (needsRedirect) {
+    // s.openrice.com short URLs go through a BytePlus JS-challenge page on GET;
+    // HEAD requests bypass the challenge and still follow the Location headers.
+    const method = rawUrl.includes("s.openrice.com") ? "HEAD" : "GET";
     try {
       const res = await fetch(rawUrl, {
-        method: "GET",
+        method,
         redirect: "follow",
         headers: { "User-Agent": MOBILE_UA },
         signal: AbortSignal.timeout(8000),
@@ -72,23 +76,39 @@ function tryParseUrl(url: string): Omit<ParsedUrl, "originalUrl"> {
       restaurantName = searchParams.get("q");
     }
 
-    // lat/lng from @lat,lng,zoom
-    const coordMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-    const latLng = coordMatch
-      ? { lat: parseFloat(coordMatch[1]!), lng: parseFloat(coordMatch[2]!) }
+    // Prefer actual place coords from !3d/!4d data params over map-center @lat,lng,zoom
+    const placeCoordMatch = url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+    const centerCoordMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    const latLng = placeCoordMatch
+      ? { lat: parseFloat(placeCoordMatch[1]!), lng: parseFloat(placeCoordMatch[2]!) }
+      : centerCoordMatch
+      ? { lat: parseFloat(centerCoordMatch[1]!), lng: parseFloat(centerCoordMatch[2]!) }
       : null;
 
-    // If we only have a CID (0x...) but no proper Place ID, we'll fall back to text search
     return { platform: "google", placeId, restaurantName, latLng };
   }
 
   // ── OpenRice ───────────────────────────────────────────────────────────────
   if (hostname.includes("openrice.com")) {
     const nameMatch = pathname.match(/\/([^/]+)\/restaurants?\/([^/]+)/);
-    const restaurantName = nameMatch
-      ? decodeURIComponent(nameMatch[2]!).replace(/-/g, " ")
-      : extractLastPathSegment(pathname);
-
+    let restaurantName: string | null;
+    if (nameMatch) {
+      restaurantName = decodeURIComponent(nameMatch[2]!).replace(/-/g, " ");
+    } else {
+      // Handle /lang/region/r-NAME-DISTRICT-CUISINE-rID format
+      const lastSegment = pathname.split("/").filter(Boolean).pop() ?? null;
+      if (lastSegment) {
+        const decoded = decodeURIComponent(lastSegment);
+        // Strip leading r- and trailing -rNUMBER to get name+district
+        restaurantName = decoded
+          .replace(/^r-/, "")
+          .replace(/-r\d+$/, "")
+          .replace(/-/g, " ")
+          .trim() || null;
+      } else {
+        restaurantName = null;
+      }
+    }
     return { platform: "openrice", placeId: null, restaurantName, latLng: null };
   }
 
@@ -116,9 +136,7 @@ function extractPlaceIdFromData(url: string): string | null {
   if (dataMatch) {
     const candidate = decodeURIComponent(dataMatch[1]!);
     // Only accept Places API v1 IDs (ChIJ... format). 0x... are CIDs which the API rejects.
-    if (candidate.startsWith("Ch")) {
-      return candidate;
-    }
+    if (candidate.startsWith("Ch")) return candidate;
   }
   return null;
 }

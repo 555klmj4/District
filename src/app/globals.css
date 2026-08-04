@@ -24,6 +24,9 @@
   --radius: 0.75rem;
   --open-green: oklch(0.50 0.16 142);
   --closed-red: oklch(0.56 0.22 25);
+  --region-hk-island: oklch(0.955 0.02 250);
+  --region-kowloon:   oklch(0.955 0.02 25);
+  --region-nt:        oklch(0.955 0.02 142);
 }
 
 @theme inline {
@@ -62,4 +65,23 @@ body {
 }
 .mb-safe {
   margin-bottom: env(safe-area-inset-bottom);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes loading-bar {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.loading-bar {
+  animation: loading-bar 1.4s ease-in-out infinite;
 }

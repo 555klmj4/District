@@ -3,7 +3,7 @@ import { DiscoverFeed } from "@/components/discover/DiscoverFeed";
 
 export default function DiscoverPage() {
   return (
-    <PageShell titleKey="page_discover">
+    <PageShell className="pt-0">
       <DiscoverFeed />
     </PageShell>
   );

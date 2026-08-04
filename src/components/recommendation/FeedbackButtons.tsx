@@ -1,5 +1,5 @@
 "use client";
-import { ThumbsUp, ThumbsDown } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/client/trpc";
 import { toast } from "sonner";
@@ -33,7 +33,7 @@ export function FeedbackButtons({ historyId, restaurantId, className }: Feedback
           submit.mutate({ history_id: historyId, restaurant_id: restaurantId, signal: "thumbs_up" })
         }
       >
-        <ThumbsUp className="w-4 h-4" />
+        {submit.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <ThumbsUp className="w-4 h-4" />}
         {t("feedback_good")}
       </Button>
       <Button
@@ -45,7 +45,7 @@ export function FeedbackButtons({ historyId, restaurantId, className }: Feedback
           submit.mutate({ history_id: historyId, restaurant_id: restaurantId, signal: "thumbs_down" })
         }
       >
-        <ThumbsDown className="w-4 h-4" />
+        {submit.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <ThumbsDown className="w-4 h-4" />}
         {t("feedback_bad")}
       </Button>
     </div>
