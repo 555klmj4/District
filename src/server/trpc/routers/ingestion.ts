@@ -9,7 +9,7 @@ import {
   searchBranchCandidates,
 } from "@/server/ingestion/googlePlaces";
 import { normalizePlace, extractAddressParts } from "@/server/ingestion/normalizer";
-import { brandQuery, isSameBrand } from "@/server/ingestion/branches";
+import { brandSearchQueries, isSameBrand } from "@/server/ingestion/branches";
 import { computeRatingAggregate } from "@/server/ingestion/normalizer";
 import { classifyCuisine } from "@/server/ai/classifyCuisine";
 import { generateSignatureDishes } from "@/server/ai/signatureDishes";
@@ -72,14 +72,27 @@ export const ingestionRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Restaurant not found" });
       }
 
-      const query = brandQuery(base.name);
-      const [results, resultsZh] = await Promise.all([
-        searchBranchCandidates(query),
-        searchBranchCandidates(query, "zh-TW").catch(() => []),
-      ]);
-      const zhByPlaceId = new Map(resultsZh.map((p) => [p.id, p.displayName.text]));
+      // Generic English brand names ("A Little Treat") get read as a phrase
+      // and buried among unrelated places, so also search the Chinese brand
+      // name, which is usually distinctive.
+      const queries = brandSearchQueries(base.name, base.name_zh);
+      const searches = await Promise.all(
+        queries.map((q) =>
+          Promise.all([
+            searchBranchCandidates(q),
+            searchBranchCandidates(q, "zh-TW").catch(() => []),
+          ])
+        )
+      );
 
-      const candidates = results
+      const byPlaceId = new Map<string, (typeof searches)[number][0][number]>();
+      const zhByPlaceId = new Map<string, string>();
+      for (const [en, zh] of searches) {
+        for (const p of en) if (!byPlaceId.has(p.id)) byPlaceId.set(p.id, p);
+        for (const p of zh) if (!zhByPlaceId.has(p.id)) zhByPlaceId.set(p.id, p.displayName.text);
+      }
+
+      const candidates = [...byPlaceId.values()]
         .filter((p) => p.id !== base.google_place_id)
         .map((p) => ({ place: p, name_zh: zhByPlaceId.get(p.id) ?? null }))
         .filter(({ place, name_zh }) =>
@@ -115,7 +128,7 @@ export const ingestionRouter = router({
     }),
 
   importBranches: authedProcedure
-    .input(z.object({ placeIds: z.array(z.string().min(1)).min(1).max(20) }))
+    .input(z.object({ placeIds: z.array(z.string().min(1)).min(1).max(40) }))
     .mutation(async ({ ctx, input }) => {
       const { userId, db } = ctx;
       const placeIds = [...new Set(input.placeIds)];
