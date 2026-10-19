@@ -16,7 +16,7 @@ import {
 import { trpc } from "@/client/trpc";
 import { useTranslation } from "@/lib/i18n";
 import { districtZh } from "@/lib/district-zh";
-import { colorHex, STAR_COLOR_CLASS, STAR_BG_LIGHT_CLASS, STAR_BG_LIGHTER_CLASS } from "@/lib/colors";
+import { colorHex, STAR_COLOR_CLASS, STAR_BG_LIGHT_CLASS } from "@/lib/colors";
 import { getColorTagOverride } from "@/lib/colorTagOverride";
 import { cn } from "@/lib/utils";
 import { hasChinese, bilingualName } from "@/lib/restaurant-name";
@@ -72,13 +72,11 @@ export const RestaurantCard = memo(function RestaurantCard({ restaurant, classNa
 
   const handleTouchMove = (e: React.TouchEvent) => {
     const dx = e.touches[0]!.clientX - dragStartX.current;
-    setDragX(Math.max(-MAX_DRAG, Math.min(dx, MAX_DRAG)));
+    setDragX(Math.max(-MAX_DRAG, Math.min(dx, 0)));
   };
 
   const handleTouchEnd = () => {
-    if (dragX > SWIPE_THRESHOLD) {
-      starMutation.mutate({ restaurant_id: restaurant.id });
-    } else if (dragX < -SWIPE_THRESHOLD) {
+    if (dragX < -SWIPE_THRESHOLD) {
       setConfirmDeleteOpen(true);
     }
     setIsDragging(false);
@@ -113,12 +111,6 @@ export const RestaurantCard = memo(function RestaurantCard({ restaurant, classNa
   return (
     <div className={cn("relative overflow-hidden group", className)}>
       <div
-        className={cn("absolute inset-0 flex items-center pl-4", STAR_BG_LIGHTER_CLASS)}
-        style={{ opacity: Math.max(0, Math.min(dragX / SWIPE_THRESHOLD, 1)) }}
-      >
-        <Star className={cn("w-5 h-5", STAR_COLOR_CLASS)} fill="currentColor" />
-      </div>
-      <div
         className="absolute inset-0 flex items-center justify-end pr-4 bg-destructive/10"
         style={{ opacity: Math.max(0, Math.min(-dragX / SWIPE_THRESHOLD, 1)) }}
       >
@@ -142,13 +134,27 @@ export const RestaurantCard = memo(function RestaurantCard({ restaurant, classNa
         }}
       >
       {/* Main row */}
-      <div className="flex items-center gap-3 pl-3 pr-4 py-3">
+      <div className="flex items-center gap-2 pl-1.5 pr-4 py-3">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            starMutation.mutate({ restaurant_id: id });
+          }}
+          disabled={starMutation.isPending}
+          className="p-1.5 shrink-0 rounded-md hover:bg-muted transition-colors disabled:opacity-50"
+          aria-label={is_starred ? t("unstar_restaurant") : t("star_restaurant")}
+          aria-pressed={!!is_starred}
+        >
+          <Star
+            className={cn("w-4 h-4", is_starred ? STAR_COLOR_CLASS : "text-muted-foreground/60")}
+            fill={is_starred ? "currentColor" : "none"}
+          />
+        </button>
+
         {/* Left: name + meta */}
         <div className="flex-1 min-w-0">
           <span className="inline-flex items-center gap-1">
-            {is_starred && (
-              <Star className={cn("w-3 h-3 shrink-0", STAR_COLOR_CLASS)} fill="currentColor" />
-            )}
             <Link
               href={`/restaurants/${id}`}
               className="font-semibold text-foreground text-sm leading-snug hover:text-primary transition-colors line-clamp-1"
@@ -212,25 +218,8 @@ export const RestaurantCard = memo(function RestaurantCard({ restaurant, classNa
           </div>
         </div>
 
-        {/* Pointer-only quick actions — touch devices already have the swipe
-            gesture; this exists so mouse/trackpad users have a way to star
-            or delete without opening the detail page. */}
+        {/* Pointer-only delete — touch devices swipe left instead. */}
         <div className="hidden pointer-fine:group-hover:flex items-center gap-0.5 shrink-0">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              starMutation.mutate({ restaurant_id: restaurant.id });
-            }}
-            disabled={starMutation.isPending}
-            className="p-1.5 rounded-md hover:bg-muted transition-colors disabled:opacity-50"
-            aria-label={is_starred ? t("unstar_restaurant") : t("star_restaurant")}
-          >
-            <Star
-              className={cn("w-4 h-4", is_starred ? STAR_COLOR_CLASS : "text-muted-foreground")}
-              fill={is_starred ? "currentColor" : "none"}
-            />
-          </button>
           <button
             type="button"
             onClick={(e) => {
