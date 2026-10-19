@@ -1,87 +1,91 @@
-const DISTRICT_ZH: Record<string, string> = {
+export type Region = "HK Island" | "Kowloon" | "N.T.";
+
+// One row per neighbourhood so its Chinese name and region can't drift apart.
+const DISTRICTS: Record<string, { zh: string; region: Region }> = {
   // Hong Kong Island
-  "Central":           "中環",
-  "Sheung Wan":        "上環",
-  "Sai Ying Pun":      "西營盤",
-  "Sai Wan":           "西環",
-  "Western District":  "西區",
-  "Shek Tong Tsui":   "石塘咀",
-  "Kennedy Town":      "堅尼地城",
-  "Admiralty":         "金鐘",
-  "Wan Chai":          "灣仔",
-  "Causeway Bay":      "銅鑼灣",
-  "Happy Valley":      "跑馬地",
-  "North Point":       "北角",
-  "Quarry Bay":        "鰂魚涌",
-  "Tai Koo":           "太古",
-  "Sai Wan Ho":        "西灣河",
-  "Shau Kei Wan":      "筲箕灣",
-  "Chai Wan":          "柴灣",
-  "Aberdeen":          "香港仔",
-  "Ap Lei Chau":       "鴨脷洲",
-  "Stanley":           "赤柱",
-  "Repulse Bay":       "淺水灣",
-  "Pok Fu Lam":        "薄扶林",
-  "Mid-Levels":        "半山",
-  "The Peak":          "山頂",
-  "Tai Hang":          "大坑",
-  "Tin Hau":           "天后",
-  "Fortress Hill":     "炮台山",
-  "Siu Sai Wan":       "小西灣",
-  "Tai Ping Shan":     "太平山",
+  "Central":         { zh: "中環", region: "HK Island" },
+  "Sheung Wan":      { zh: "上環", region: "HK Island" },
+  "Sai Ying Pun":    { zh: "西營盤", region: "HK Island" },
+  "Sai Wan":         { zh: "西環", region: "HK Island" },
+  "Western District":{ zh: "西區", region: "HK Island" },
+  "Shek Tong Tsui":  { zh: "石塘咀", region: "HK Island" },
+  "Kennedy Town":    { zh: "堅尼地城", region: "HK Island" },
+  "Admiralty":       { zh: "金鐘", region: "HK Island" },
+  "Wan Chai":        { zh: "灣仔", region: "HK Island" },
+  "Causeway Bay":    { zh: "銅鑼灣", region: "HK Island" },
+  "Happy Valley":    { zh: "跑馬地", region: "HK Island" },
+  "North Point":     { zh: "北角", region: "HK Island" },
+  "Quarry Bay":      { zh: "鰂魚涌", region: "HK Island" },
+  "Tai Koo":         { zh: "太古", region: "HK Island" },
+  "Sai Wan Ho":      { zh: "西灣河", region: "HK Island" },
+  "Shau Kei Wan":    { zh: "筲箕灣", region: "HK Island" },
+  "Chai Wan":        { zh: "柴灣", region: "HK Island" },
+  "Aberdeen":        { zh: "香港仔", region: "HK Island" },
+  "Ap Lei Chau":     { zh: "鴨脷洲", region: "HK Island" },
+  "Stanley":         { zh: "赤柱", region: "HK Island" },
+  "Repulse Bay":     { zh: "淺水灣", region: "HK Island" },
+  "Pok Fu Lam":      { zh: "薄扶林", region: "HK Island" },
+  "Mid-Levels":      { zh: "半山", region: "HK Island" },
+  "The Peak":        { zh: "山頂", region: "HK Island" },
+  "Tai Hang":        { zh: "大坑", region: "HK Island" },
+  "Tin Hau":         { zh: "天后", region: "HK Island" },
+  "Fortress Hill":   { zh: "炮台山", region: "HK Island" },
+  "Siu Sai Wan":     { zh: "小西灣", region: "HK Island" },
+  "Tai Ping Shan":   { zh: "太平山", region: "HK Island" },
+  "Aldrich Bay":     { zh: "愛秩序灣", region: "HK Island" },
 
   // Kowloon
-  "Tsim Sha Tsui":     "尖沙咀",
-  "Yau Ma Tei":        "油麻地",
-  "Mong Kok":          "旺角",
-  "Jordan":            "佐敦",
-  "Prince Edward":     "太子",
-  "Sham Shui Po":      "深水埗",
-  "Cheung Sha Wan":    "長沙灣",
-  "Lai Chi Kok":       "荔枝角",
-  "Kowloon City":      "九龍城",
-  "To Kwa Wan":        "土瓜灣",
-  "Hung Hom":          "紅磡",
-  "Ho Man Tin":        "何文田",
-  "Kwun Tong":         "觀塘",
-  "Lam Tin":           "藍田",
-  "Yau Tong":          "油塘",
-  "Tseung Kwan O":     "將軍澳",
-  "Tung Tau":          "東頭",
-  "Wong Tai Sin":      "黃大仙",
-  "Diamond Hill":      "鑽石山",
-  "Choi Hung":         "彩虹",
-  "Kowloon Bay":       "九龍灣",
-  "Ngau Tau Kok":      "牛頭角",
-  "Ngau Chi Wan":      "牛池灣",
+  "Tsim Sha Tsui":   { zh: "尖沙咀", region: "Kowloon" },
+  "Yau Ma Tei":      { zh: "油麻地", region: "Kowloon" },
+  "Mong Kok":        { zh: "旺角", region: "Kowloon" },
+  "Jordan":          { zh: "佐敦", region: "Kowloon" },
+  "Prince Edward":   { zh: "太子", region: "Kowloon" },
+  "Sham Shui Po":    { zh: "深水埗", region: "Kowloon" },
+  "Cheung Sha Wan":  { zh: "長沙灣", region: "Kowloon" },
+  "Lai Chi Kok":     { zh: "荔枝角", region: "Kowloon" },
+  "Kowloon City":    { zh: "九龍城", region: "Kowloon" },
+  "To Kwa Wan":      { zh: "土瓜灣", region: "Kowloon" },
+  "Hung Hom":        { zh: "紅磡", region: "Kowloon" },
+  "Ho Man Tin":      { zh: "何文田", region: "Kowloon" },
+  "Kwun Tong":       { zh: "觀塘", region: "Kowloon" },
+  "Lam Tin":         { zh: "藍田", region: "Kowloon" },
+  "Yau Tong":        { zh: "油塘", region: "Kowloon" },
+  "Tseung Kwan O":   { zh: "將軍澳", region: "Kowloon" },
+  "Tung Tau":        { zh: "東頭", region: "Kowloon" },
+  "Wong Tai Sin":    { zh: "黃大仙", region: "Kowloon" },
+  "Diamond Hill":    { zh: "鑽石山", region: "Kowloon" },
+  "Choi Hung":       { zh: "彩虹", region: "Kowloon" },
+  "Kowloon Bay":     { zh: "九龍灣", region: "Kowloon" },
+  "Ngau Tau Kok":    { zh: "牛頭角", region: "Kowloon" },
+  "Ngau Chi Wan":    { zh: "牛池灣", region: "Kowloon" },
 
   // New Territories
-  "Tsuen Wan":         "荃灣",
-  "Kwai Chung":        "葵涌",
-  "Kwai Fong":         "葵芳",
-  "Tsing Yi":          "青衣",
-  "Sha Tin":           "沙田",
-  "Ma On Shan":        "馬鞍山",
-  "Tai Wai":           "大圍",
-  "Fo Tan":            "火炭",
-  "Tuen Mun":          "屯門",
-  "Yuen Long":         "元朗",
-  "Tin Shui Wai":      "天水圍",
-  "Fanling":           "粉嶺",
-  "Sheung Shui":       "上水",
-  "Tai Po":            "大埔",
-  "Sai Kung":          "西貢",
-  "Tung Chung":        "東涌",
-  "Ma Wan":            "馬灣",
-  "Clearwater Bay":    "清水灣",
-  "Hang Hau":          "坑口",
-  "Po Lam":            "寶琳",
-  "Shuen Wan":         "船灣",
+  "Tsuen Wan":       { zh: "荃灣", region: "N.T." },
+  "Kwai Chung":      { zh: "葵涌", region: "N.T." },
+  "Kwai Fong":       { zh: "葵芳", region: "N.T." },
+  "Tsing Yi":        { zh: "青衣", region: "N.T." },
+  "Sha Tin":         { zh: "沙田", region: "N.T." },
+  "Ma On Shan":      { zh: "馬鞍山", region: "N.T." },
+  "Tai Wai":         { zh: "大圍", region: "N.T." },
+  "Fo Tan":          { zh: "火炭", region: "N.T." },
+  "Tuen Mun":        { zh: "屯門", region: "N.T." },
+  "Yuen Long":       { zh: "元朗", region: "N.T." },
+  "Tin Shui Wai":    { zh: "天水圍", region: "N.T." },
+  "Fanling":         { zh: "粉嶺", region: "N.T." },
+  "Sheung Shui":     { zh: "上水", region: "N.T." },
+  "Tai Po":          { zh: "大埔", region: "N.T." },
+  "Sai Kung":        { zh: "西貢", region: "N.T." },
+  "Tung Chung":      { zh: "東涌", region: "N.T." },
+  "Ma Wan":          { zh: "馬灣", region: "N.T." },
+  "Clearwater Bay":  { zh: "清水灣", region: "N.T." },
+  "Hang Hau":        { zh: "坑口", region: "N.T." },
+  "Po Lam":          { zh: "寶琳", region: "N.T." },
+  "Shuen Wan":       { zh: "船灣", region: "N.T." },
 };
 
 export function districtZh(englishDistrict: string | null | undefined): string | null {
   if (!englishDistrict) return null;
-  return DISTRICT_ZH[englishDistrict] ?? null;
+  return DISTRICTS[englishDistrict]?.zh ?? null;
 }
 
 // Section headers only have the English district key; when it isn't in the
@@ -98,7 +102,7 @@ export function districtLabelZh(
 }
 
 const DISTRICT_ZH_TO_EN: Record<string, string> = Object.fromEntries(
-  Object.entries(DISTRICT_ZH).map(([en, zh]) => [zh, en])
+  Object.entries(DISTRICTS).map(([en, { zh }]) => [zh, en])
 );
 
 export function districtEn(chineseDistrict: string | null | undefined): string | null {
@@ -106,31 +110,6 @@ export function districtEn(chineseDistrict: string | null | undefined): string |
   return DISTRICT_ZH_TO_EN[chineseDistrict] ?? null;
 }
 
-const HK_ISLAND_DISTRICTS = new Set([
-  "Central", "Sheung Wan", "Sai Ying Pun", "Sai Wan", "Western District",
-  "Shek Tong Tsui", "Kennedy Town", "Admiralty", "Wan Chai", "Causeway Bay",
-  "Happy Valley", "North Point", "Quarry Bay", "Tai Koo", "Sai Wan Ho",
-  "Shau Kei Wan", "Chai Wan", "Aberdeen", "Ap Lei Chau", "Stanley",
-  "Repulse Bay", "Pok Fu Lam", "Mid-Levels", "The Peak", "Tai Hang",
-  "Tin Hau", "Fortress Hill", "Siu Sai Wan", "Tai Ping Shan",
-]);
-
-const KOWLOON_DISTRICTS = new Set([
-  "Tsim Sha Tsui", "Yau Ma Tei", "Mong Kok", "Jordan", "Prince Edward",
-  "Sham Shui Po", "Cheung Sha Wan", "Lai Chi Kok", "Kowloon City",
-  "To Kwa Wan", "Hung Hom", "Ho Man Tin", "Kwun Tong", "Lam Tin",
-  "Yau Tong", "Tseung Kwan O", "Tung Tau", "Wong Tai Sin", "Diamond Hill",
-  "Choi Hung", "Kowloon Bay", "Ngau Tau Kok", "Ngau Chi Wan",
-]);
-
-const NT_DISTRICTS = new Set([
-  "Tsuen Wan", "Kwai Chung", "Kwai Fong", "Tsing Yi", "Sha Tin",
-  "Ma On Shan", "Tai Wai", "Fo Tan", "Tuen Mun", "Yuen Long",
-  "Tin Shui Wai", "Fanling", "Sheung Shui", "Tai Po", "Sai Kung",
-  "Tung Chung", "Ma Wan", "Clearwater Bay", "Hang Hau", "Po Lam", "Shuen Wan",
-]);
-
-export type Region = "HK Island" | "Kowloon" | "N.T.";
 export const REGIONS: Region[] = ["HK Island", "Kowloon", "N.T."];
 export const REGION_ZH: Record<Region, string> = {
   "HK Island": "港島",
@@ -146,8 +125,5 @@ export const REGION_COLORS: Record<Region, { bg: string; text: string; active: s
 
 export function districtToRegion(district: string | null | undefined): Region | null {
   if (!district) return null;
-  if (HK_ISLAND_DISTRICTS.has(district)) return "HK Island";
-  if (KOWLOON_DISTRICTS.has(district))   return "Kowloon";
-  if (NT_DISTRICTS.has(district))        return "N.T.";
-  return null;
+  return DISTRICTS[district]?.region ?? null;
 }
