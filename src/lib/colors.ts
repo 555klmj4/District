@@ -27,7 +27,6 @@ export const NO_COLOR_ID = "none";
 // preview) can't silently drift apart from each other.
 export const STAR_COLOR_CLASS = "text-amber-500";
 export const STAR_BG_LIGHT_CLASS = "bg-amber-50";
-export const STAR_BG_LIGHTER_CLASS = "bg-amber-100";
 
 export function sortColorTags<T extends string>(colors: T[]): T[] {
   return [...colors].sort(
