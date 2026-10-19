@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Phone, Globe, CalendarCheck, ExternalLink, Link2, Trash2, Share2, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, Phone, Globe, CalendarCheck, ExternalLink, Link2, Trash2, Share2, Check, Loader2, Store } from "lucide-react";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -11,6 +11,7 @@ import { StatusIndicator } from "./StatusIndicator";
 import { MapLaunchButton } from "./MapLaunchButton";
 import { ColorPicker } from "./ColorPicker";
 import { GlassCircleButton } from "@/components/layout/GlassCircleButton";
+import { BranchSuggestions } from "@/components/bookmark/BranchSuggestions";
 import { trpc } from "@/client/trpc";
 import { Skeleton } from "@/components/ui/skeleton";
 import { buttonVariants } from "@/components/ui/button";
@@ -53,6 +54,7 @@ export function RestaurantDetail({ id, initialData, initialDataUpdatedAt }: Rest
   const zh = lang === "zh-TW";
   const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showBranches, setShowBranches] = useState(false);
   const [copiedMap, setCopiedMap] = useState(false);
   const [copiedOpenRice, setCopiedOpenRice] = useState(false);
   const [visiblePhotos, setVisiblePhotos] = useState(4);
@@ -444,6 +446,15 @@ export function RestaurantDetail({ id, initialData, initialDataUpdatedAt }: Rest
             {copiedOpenRice ? t("link_copied") : t("share_openrice_link")}
           </button>
         </div>
+        {restaurant.google_place_id && (
+          <button
+            onClick={() => setShowBranches(true)}
+            className={cn(buttonVariants({ variant: "secondary" }), "gap-2 w-full")}
+          >
+            <Store className="w-4 h-4" />
+            {t("branches_find")}
+          </button>
+        )}
       </div>
 
       {/* Other links (Yelp, etc.) */}
@@ -476,6 +487,29 @@ export function RestaurantDetail({ id, initialData, initialDataUpdatedAt }: Rest
           {t("delete_restaurant")}
         </button>
       </div>
+
+      <Dialog open={showBranches} onOpenChange={setShowBranches}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("branches_find")}</DialogTitle>
+          </DialogHeader>
+          {showBranches && (
+            <BranchSuggestions
+              restaurantId={restaurant.id}
+              restaurantName={titleName}
+              onDone={() => {
+                setShowBranches(false);
+                void utils.restaurants.list.invalidate();
+              }}
+              onEmpty={(reason) => {
+                if (reason === "error") toast.error(t("branches_error"));
+                else toast(t("branches_none"));
+                setShowBranches(false);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <DialogContent>

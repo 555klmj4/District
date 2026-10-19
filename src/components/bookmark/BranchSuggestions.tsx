@@ -21,9 +21,11 @@ interface BranchSuggestionsProps {
   restaurantId: string;
   restaurantName: string;
   onDone: () => void;
+  // Called instead of onDone when there is nothing to show; defaults to onDone.
+  onEmpty?: (reason: "none" | "error") => void;
 }
 
-export function BranchSuggestions({ restaurantId, restaurantName, onDone }: BranchSuggestionsProps) {
+export function BranchSuggestions({ restaurantId, restaurantName, onDone, onEmpty }: BranchSuggestionsProps) {
   const { lang, t } = useTranslation();
   const zh = lang === "zh-TW";
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -40,13 +42,18 @@ export function BranchSuggestions({ restaurantId, restaurantName, onDone }: Bran
     onDone();
   };
 
-  const nothingToSuggest = branches.isError || (branches.isSuccess && branches.data.length === 0);
+  const emptyReason = branches.isError
+    ? "error"
+    : branches.isSuccess && branches.data.length === 0
+      ? "none"
+      : null;
   useEffect(() => {
-    if (nothingToSuggest && !doneRef.current) {
+    if (emptyReason && !doneRef.current) {
       doneRef.current = true;
-      onDone();
+      if (onEmpty) onEmpty(emptyReason);
+      else onDone();
     }
-  }, [nothingToSuggest, onDone]);
+  }, [emptyReason, onDone, onEmpty]);
 
   const importBranches = trpc.ingestion.importBranches.useMutation({
     onSuccess: ({ added, duplicates, failed }) => {
