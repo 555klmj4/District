@@ -12,7 +12,7 @@ import { useFilterAlignment } from "@/client/hooks/useFilterAlignment";
 import { useSwipeGesture } from "@/client/hooks/useSwipeGesture";
 import { trpc } from "@/client/trpc";
 import { useTranslation } from "@/lib/i18n";
-import { districtZh, districtToRegion, REGION_COLORS } from "@/lib/district-zh";
+import { districtLabelZh, districtToRegion, REGION_COLORS } from "@/lib/district-zh";
 import { getPersistedFilters, setPersistedFilters } from "@/lib/discoverFilters";
 import { useSafeAreaTop } from "@/lib/useSafeAreaTop";
 import { cn } from "@/lib/utils";
@@ -313,7 +313,7 @@ export function DiscoverFeed() {
             className="fixed left-0 right-0 z-20 bg-transparent"
             style={{ top: HEADER_PX + starredBarHeight }}
           >
-            {sliced.map(([district], i) => {
+            {sliced.map(([district, items], i) => {
               const idx = start + i;
               const isActive = idx === activeIndex;
               const region = districtToRegion(district);
@@ -330,7 +330,7 @@ export function DiscoverFeed() {
                 >
                   {isActive && <div className="absolute inset-0 bg-primary/8 pointer-events-none" />}
                   <span className={cn("relative text-xs uppercase tracking-wider", isActive ? "font-bold" : "font-semibold", textClass)}>
-                    {zh ? (districtZh(district) ?? district) : district}
+                    {zh ? districtLabelZh(district, items) : district}
                   </span>
                 </button>
               );
@@ -365,7 +365,7 @@ export function DiscoverFeed() {
                   className={cn("px-4 pt-2 pb-1 flex items-center gap-2 border-b border-border", isActive ? "bg-primary/8" : "bg-background")}
                 >
                   <span className={cn("text-xs uppercase tracking-wider", isActive ? "font-bold" : "font-semibold", textClass)}>
-                    {zh ? (districtZh(district) ?? district) : district}
+                    {zh ? districtLabelZh(district, items) : district}
                   </span>
                   <span className="text-xs text-muted-foreground/50">
                     {items.length}

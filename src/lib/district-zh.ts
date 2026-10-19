@@ -28,6 +28,7 @@ const DISTRICT_ZH: Record<string, string> = {
   "Tin Hau":           "天后",
   "Fortress Hill":     "炮台山",
   "Siu Sai Wan":       "小西灣",
+  "Tai Ping Shan":     "太平山",
 
   // Kowloon
   "Tsim Sha Tsui":     "尖沙咀",
@@ -83,6 +84,19 @@ export function districtZh(englishDistrict: string | null | undefined): string |
   return DISTRICT_ZH[englishDistrict] ?? null;
 }
 
+// Section headers only have the English district key; when it isn't in the
+// static map, fall back to the Chinese district Google gave any restaurant in it.
+export function districtLabelZh(
+  englishDistrict: string,
+  restaurants: { district_zh?: string | null }[]
+): string {
+  return (
+    districtZh(englishDistrict) ??
+    restaurants.find((r) => r.district_zh && /[一-鿿]/.test(r.district_zh))?.district_zh ??
+    englishDistrict
+  );
+}
+
 const DISTRICT_ZH_TO_EN: Record<string, string> = Object.fromEntries(
   Object.entries(DISTRICT_ZH).map(([en, zh]) => [zh, en])
 );
@@ -98,7 +112,7 @@ const HK_ISLAND_DISTRICTS = new Set([
   "Happy Valley", "North Point", "Quarry Bay", "Tai Koo", "Sai Wan Ho",
   "Shau Kei Wan", "Chai Wan", "Aberdeen", "Ap Lei Chau", "Stanley",
   "Repulse Bay", "Pok Fu Lam", "Mid-Levels", "The Peak", "Tai Hang",
-  "Tin Hau", "Fortress Hill", "Siu Sai Wan",
+  "Tin Hau", "Fortress Hill", "Siu Sai Wan", "Tai Ping Shan",
 ]);
 
 const KOWLOON_DISTRICTS = new Set([
