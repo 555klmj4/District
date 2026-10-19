@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { UtensilsCrossed } from "lucide-react";
 import { RestaurantCard } from "@/components/restaurant/RestaurantCard";
 import { useTranslation } from "@/lib/i18n";
-import { districtToRegion, districtZh, REGION_COLORS } from "@/lib/district-zh";
+import { districtToRegion, districtLabelZh, REGION_COLORS } from "@/lib/district-zh";
 import { cn } from "@/lib/utils";
 import type { Restaurant } from "@/shared/types/restaurant";
 
@@ -54,7 +54,7 @@ export function MapRestaurantList({ restaurants, selectedId, onSelect }: MapRest
           <div key={district}>
             <div className="sticky top-0 z-10 px-4 pt-2 pb-1 flex items-center gap-2 border-b border-border bg-background">
               <span className={cn("text-xs uppercase tracking-wider font-semibold", textClass)}>
-                {zh ? (districtZh(district) ?? district) : district}
+                {zh ? districtLabelZh(district, items) : district}
               </span>
               <span className="text-xs text-muted-foreground/50">{items.length}</span>
             </div>
