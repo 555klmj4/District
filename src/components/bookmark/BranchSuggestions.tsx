@@ -99,7 +99,8 @@ export function BranchSuggestions({ restaurantId, restaurantName, onDone, onEmpt
   for (const region of [...REGIONS, null]) groups.set(region, []);
   for (const b of items) groups.get(districtToRegion(b.district))!.push(b);
 
-  const allSelected = selected.size === items.length;
+  const selectable = items.filter((b) => !b.saved);
+  const allSelected = selectable.length > 0 && selected.size === selectable.length;
   const toggle = (placeId: string) =>
     setSelected((prev) => {
       const next = new Set(prev);
@@ -120,9 +121,9 @@ export function BranchSuggestions({ restaurantId, restaurantName, onDone, onEmpt
             type="checkbox"
             className="accent-primary"
             checked={allSelected}
-            disabled={isPending}
+            disabled={isPending || selectable.length === 0}
             onChange={() =>
-              setSelected(allSelected ? new Set() : new Set(items.map((b) => b.placeId)))
+              setSelected(allSelected ? new Set() : new Set(selectable.map((b) => b.placeId)))
             }
           />
           {t("branches_select_all")}
@@ -145,18 +146,28 @@ export function BranchSuggestions({ restaurantId, restaurantName, onDone, onEmpt
               {list.map((b) => (
                 <label
                   key={b.placeId}
-                  className="flex cursor-pointer items-start gap-2.5 rounded-md px-2 py-2 hover:bg-muted/60"
+                  className={cn(
+                    "flex items-start gap-2.5 rounded-md px-2 py-2",
+                    b.saved ? "opacity-50" : "cursor-pointer hover:bg-muted/60"
+                  )}
                 >
                   <input
                     type="checkbox"
                     className="accent-primary mt-1"
-                    checked={selected.has(b.placeId)}
-                    disabled={isPending}
+                    checked={b.saved || selected.has(b.placeId)}
+                    disabled={isPending || b.saved}
                     onChange={() => toggle(b.placeId)}
                   />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">
-                      {bilingualName(b.name, b.name_zh)}
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      <span className="truncate text-sm font-medium">
+                        {bilingualName(b.name, b.name_zh)}
+                      </span>
+                      {b.saved && (
+                        <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                          {t("branches_saved_label")}
+                        </span>
+                      )}
                     </span>
                     <span className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
                       {b.district && (

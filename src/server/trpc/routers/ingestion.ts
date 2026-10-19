@@ -99,13 +99,6 @@ export const ingestionRouter = router({
           isSameBrand({ name: place.displayName.text, name_zh }, base)
         );
 
-      console.info("[findBranches]", {
-        restaurantId: input.restaurantId,
-        queries,
-        found: [...byPlaceId.values()].map((p) => p.displayName.text),
-        matched: candidates.map(({ place }) => place.displayName.text),
-      });
-
       if (candidates.length === 0) return [];
 
       const saved = await db
@@ -122,10 +115,12 @@ export const ingestionRouter = router({
         );
       const savedIds = new Set(saved.map((r) => r.google_place_id));
 
+      // Already-saved branches are returned (flagged) rather than hidden, so
+      // the dialog never claims a chain has no other branches.
       return candidates
-        .filter(({ place }) => !savedIds.has(place.id))
         .map(({ place, name_zh }) => ({
           placeId: place.id,
+          saved: savedIds.has(place.id),
           name: place.displayName.text,
           name_zh,
           address: place.shortFormattedAddress ?? place.formattedAddress,
