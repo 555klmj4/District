@@ -71,7 +71,7 @@ export function BranchSuggestions({ restaurantId, restaurantName, onDone, onEmpt
 
   if (!branches.data || branches.data.length === 0) {
     return (
-      <div className="space-y-3 pt-2">
+      <div className="min-w-0 space-y-3 pt-2">
         <p className="text-sm text-muted-foreground flex items-center gap-1.5">
           <Loader2 className="w-4 h-4 animate-spin" />
           {t("branches_checking")}
@@ -106,7 +106,7 @@ export function BranchSuggestions({ restaurantId, restaurantName, onDone, onEmpt
   const isPending = importBranches.isPending;
 
   return (
-    <div className="space-y-3 pt-2">
+    <div className="min-w-0 space-y-3 pt-2">
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-medium min-w-0 truncate">
           {t("branches_title")} {restaurantName}
@@ -150,11 +150,11 @@ export function BranchSuggestions({ restaurantId, restaurantName, onDone, onEmpt
                     disabled={isPending}
                     onChange={() => toggle(b.placeId)}
                   />
-                  <span className="min-w-0">
+                  <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">
                       {bilingualName(b.name, b.name_zh)}
                     </span>
-                    <span className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+                    <span className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
                       {b.district && (
                         <>
                           <MapPin className="w-3 h-3 shrink-0" />
@@ -162,7 +162,7 @@ export function BranchSuggestions({ restaurantId, restaurantName, onDone, onEmpt
                           <span className="shrink-0">·</span>
                         </>
                       )}
-                      <span className="truncate">{b.address}</span>
+                      <span className="min-w-0 truncate">{b.address}</span>
                     </span>
                   </span>
                 </label>
