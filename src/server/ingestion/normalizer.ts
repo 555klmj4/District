@@ -270,7 +270,7 @@ function normalizeHours(
   return Object.keys(hours).length > 0 ? hours : null;
 }
 
-function extractAddressParts(
+export function extractAddressParts(
   components: NonNullable<PlaceResult["addressComponents"]>
 ): { district: string | null; city: string | null; country: string | null } {
   const byType: Record<string, string> = {};

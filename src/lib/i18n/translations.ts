@@ -88,6 +88,15 @@ export const en = {
   import_search_placeholder: "Restaurant name…",
   import_search_no_results: "No matches found",
   import_search_error: "Search failed — try again",
+  branches_title: "Other branches of",
+  branches_checking: "Checking for other branches…",
+  branches_select_all: "Select all",
+  branches_add: "Add selected",
+  branches_skip: "Skip",
+  branches_added: "Added branches:",
+  branches_already_saved: "already saved",
+  branches_failed: "failed",
+  branches_region_other: "Other",
 
   // Recommendation
   query_placeholder: 'What are you feeling? (e.g. "something cozy for tonight")',
@@ -239,6 +248,15 @@ export const zhTW: Record<keyof typeof en, string> = {
   import_search_placeholder: "餐廳名稱…",
   import_search_no_results: "找不到相符結果",
   import_search_error: "搜尋失敗，請重試",
+  branches_title: "其他分店：",
+  branches_checking: "正在搜尋其他分店…",
+  branches_select_all: "全選",
+  branches_add: "加入所選",
+  branches_skip: "略過",
+  branches_added: "已加入分店：",
+  branches_already_saved: "已儲存",
+  branches_failed: "失敗",
+  branches_region_other: "其他",
 
   // Recommendation
   query_placeholder: "想吃什麼？（例如：今晚想吃暖胃的東西）",

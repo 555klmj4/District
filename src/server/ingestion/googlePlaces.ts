@@ -178,6 +178,27 @@ export interface PlaceSearchResult {
   primaryTypeDisplayName?: { text: string };
 }
 
+async function postTextSearch<T>(
+  body: Record<string, unknown>,
+  fieldMask: string,
+  languageCode?: string
+): Promise<T[]> {
+  const res = await fetch(`${PLACES_API_BASE}/places:searchText`, {
+    method: "POST",
+    headers: headers(fieldMask, languageCode),
+    body: JSON.stringify(body),
+    next: { revalidate: 0 },
+  });
+
+  if (!res.ok) {
+    const errBody = await res.text();
+    throw new Error(`Places name search error ${res.status}: ${errBody}`);
+  }
+
+  const data = (await res.json()) as { places?: T[] };
+  return data.places ?? [];
+}
+
 export async function searchPlacesByName(
   query: string,
   locationBias?: { lat: number; lng: number },
@@ -202,18 +223,29 @@ export async function searchPlacesByName(
     };
   }
 
-  const res = await fetch(`${PLACES_API_BASE}/places:searchText`, {
-    method: "POST",
-    headers: headers(NAME_SEARCH_FIELD_MASK, languageCode),
-    body: JSON.stringify(body),
-    next: { revalidate: 0 },
-  });
+  return postTextSearch<PlaceSearchResult>(body, NAME_SEARCH_FIELD_MASK, languageCode);
+}
 
-  if (!res.ok) {
-    const errBody = await res.text();
-    throw new Error(`Places name search error ${res.status}: ${errBody}`);
-  }
+export type BranchCandidate = PlaceSearchResult & {
+  addressComponents?: PlaceResult["addressComponents"];
+};
 
-  const data = (await res.json()) as { places?: PlaceSearchResult[] };
-  return data.places ?? [];
+const BRANCH_SEARCH_FIELD_MASK = [...SEARCH_FIELDS, "addressComponents"]
+  .map((f) => `places.${f}`)
+  .join(",");
+
+export async function searchBranchCandidates(
+  query: string,
+  languageCode?: string
+): Promise<BranchCandidate[]> {
+  return postTextSearch<BranchCandidate>(
+    {
+      textQuery: query,
+      maxResultCount: 20,
+      locationRestriction: HK_BOUNDS,
+      ...(languageCode ? { languageCode } : {}),
+    },
+    BRANCH_SEARCH_FIELD_MASK,
+    languageCode
+  );
 }

@@ -1,10 +1,15 @@
 import { z } from "zod";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, inArray } from "drizzle-orm";
 import { router, authedProcedure, TRPCError } from "../init";
 import { restaurants, restaurantSources } from "@/server/db/schema";
 import { importUrl, importByPlaceId } from "@/server/ingestion/pipeline";
-import { fetchByPlaceId, searchPlacesByName } from "@/server/ingestion/googlePlaces";
-import { normalizePlace } from "@/server/ingestion/normalizer";
+import {
+  fetchByPlaceId,
+  searchPlacesByName,
+  searchBranchCandidates,
+} from "@/server/ingestion/googlePlaces";
+import { normalizePlace, extractAddressParts } from "@/server/ingestion/normalizer";
+import { brandQuery, isSameBrand } from "@/server/ingestion/branches";
 import { computeRatingAggregate } from "@/server/ingestion/normalizer";
 import { classifyCuisine } from "@/server/ai/classifyCuisine";
 import { generateSignatureDishes } from "@/server/ai/signatureDishes";
@@ -46,6 +51,100 @@ export const ingestionRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { userId, db } = ctx;
       return await importByPlaceId({ placeId: input.placeId, userId, db });
+    }),
+
+  findBranches: authedProcedure
+    .input(z.object({ restaurantId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { userId, db } = ctx;
+
+      const [base] = await db
+        .select({
+          name: restaurants.name,
+          name_zh: restaurants.name_zh,
+          google_place_id: restaurants.google_place_id,
+        })
+        .from(restaurants)
+        .where(and(eq(restaurants.id, input.restaurantId), eq(restaurants.user_id, userId)))
+        .limit(1);
+
+      if (!base) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Restaurant not found" });
+      }
+
+      const query = brandQuery(base.name);
+      const [results, resultsZh] = await Promise.all([
+        searchBranchCandidates(query),
+        searchBranchCandidates(query, "zh-TW").catch(() => []),
+      ]);
+      const zhByPlaceId = new Map(resultsZh.map((p) => [p.id, p.displayName.text]));
+
+      const candidates = results
+        .filter((p) => p.id !== base.google_place_id)
+        .map((p) => ({ place: p, name_zh: zhByPlaceId.get(p.id) ?? null }))
+        .filter(({ place, name_zh }) =>
+          isSameBrand({ name: place.displayName.text, name_zh }, base)
+        );
+
+      if (candidates.length === 0) return [];
+
+      const saved = await db
+        .select({ google_place_id: restaurants.google_place_id })
+        .from(restaurants)
+        .where(
+          and(
+            eq(restaurants.user_id, userId),
+            inArray(
+              restaurants.google_place_id,
+              candidates.map(({ place }) => place.id)
+            )
+          )
+        );
+      const savedIds = new Set(saved.map((r) => r.google_place_id));
+
+      return candidates
+        .filter(({ place }) => !savedIds.has(place.id))
+        .map(({ place, name_zh }) => ({
+          placeId: place.id,
+          name: place.displayName.text,
+          name_zh,
+          address: place.shortFormattedAddress ?? place.formattedAddress,
+          district: extractAddressParts(place.addressComponents ?? []).district,
+          rating: place.rating ?? null,
+        }));
+    }),
+
+  importBranches: authedProcedure
+    .input(z.object({ placeIds: z.array(z.string().min(1)).min(1).max(20) }))
+    .mutation(async ({ ctx, input }) => {
+      const { userId, db } = ctx;
+      const placeIds = [...new Set(input.placeIds)];
+
+      let added = 0;
+      let duplicates = 0;
+      let failed = 0;
+
+      // Each import makes two Places calls and schedules LLM/OpenRice
+      // enrichment, so cap concurrency rather than firing all at once.
+      for (let i = 0; i < placeIds.length; i += 5) {
+        const results = await Promise.allSettled(
+          placeIds
+            .slice(i, i + 5)
+            .map((placeId) => importByPlaceId({ placeId, userId, db }))
+        );
+        for (const r of results) {
+          if (r.status === "rejected") {
+            failed++;
+            console.error("[importBranches] import failed:", r.reason);
+          } else if (r.value.was_duplicate) {
+            duplicates++;
+          } else {
+            added++;
+          }
+        }
+      }
+
+      return { added, duplicates, failed };
     }),
 
   enrichById: authedProcedure

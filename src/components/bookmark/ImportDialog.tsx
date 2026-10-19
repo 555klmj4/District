@@ -18,6 +18,7 @@ import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { cn } from "@/lib/utils";
 import { STAR_COLOR_CLASS } from "@/lib/colors";
 import { bilingualName } from "@/lib/restaurant-name";
+import { BranchSuggestions } from "./BranchSuggestions";
 
 function extractUrl(text: string): string {
   if (/^https?:\/\/\S+$/.test(text.trim())) return text.trim();
@@ -36,15 +37,22 @@ export function ImportDialog({ renderTrigger, iconOnly }: ImportDialogProps = {}
   const [url, setUrl] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
+  const [branchesFor, setBranchesFor] = useState<{ id: string; name: string } | null>(null);
   const { t } = useTranslation();
 
   const utils = trpc.useUtils();
 
-  const resetAndClose = (name: string, wasDuplicate: boolean) => {
-    toast.success(wasDuplicate ? `Already saved: ${name}` : `Saved: ${name}`);
+  const showBranches = (data: { restaurant_id: string; restaurant: { name: string }; was_duplicate: boolean }) => {
+    const { name } = data.restaurant;
+    toast.success(data.was_duplicate ? `Already saved: ${name}` : `Saved: ${name}`);
+    setBranchesFor({ id: data.restaurant_id, name });
+  };
+
+  const finish = () => {
     setUrl("");
     setSearchQuery("");
     setSelectedPlaceId(null);
+    setBranchesFor(null);
     setOpen(false);
     // Defer the list refetch/re-render to its own tick so it can't block the
     // browser from painting the dialog-closed state in the same frame — on a
@@ -56,14 +64,14 @@ export function ImportDialog({ renderTrigger, iconOnly }: ImportDialogProps = {}
   };
 
   const importMutation = trpc.ingestion.importUrl.useMutation({
-    onSuccess: (data) => resetAndClose(data.restaurant.name, data.was_duplicate),
+    onSuccess: showBranches,
     onError: (err) => {
       toast.error(err.message ?? "Failed to import restaurant");
     },
   });
 
   const importByPlaceIdMutation = trpc.ingestion.importByPlaceId.useMutation({
-    onSuccess: (data) => resetAndClose(data.restaurant.name, data.was_duplicate),
+    onSuccess: showBranches,
     onError: (err) => {
       toast.error(err.message ?? "Failed to import restaurant");
       setSelectedPlaceId(null);
@@ -99,6 +107,12 @@ export function ImportDialog({ renderTrigger, iconOnly }: ImportDialogProps = {}
           setUrl("");
           setSearchQuery("");
           setSelectedPlaceId(null);
+          if (branchesFor) {
+            setBranchesFor(null);
+            setTimeout(() => {
+              void utils.restaurants.list.invalidate();
+            }, 0);
+          }
         }
       }}
     >
@@ -116,6 +130,13 @@ export function ImportDialog({ renderTrigger, iconOnly }: ImportDialogProps = {}
         <DialogHeader>
           <DialogTitle>{t("add_restaurant")}</DialogTitle>
         </DialogHeader>
+        {branchesFor ? (
+          <BranchSuggestions
+            restaurantId={branchesFor.id}
+            restaurantName={branchesFor.name}
+            onDone={finish}
+          />
+        ) : (
         <div className="space-y-4 pt-2">
           <div className="flex gap-1 rounded-lg bg-muted p-1">
             <button
@@ -250,6 +271,7 @@ export function ImportDialog({ renderTrigger, iconOnly }: ImportDialogProps = {}
             </>
           )}
         </div>
+        )}
       </DialogContent>
     </Dialog>
   );
