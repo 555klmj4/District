@@ -97,6 +97,9 @@ export const en = {
   branches_already_saved: "already saved",
   branches_failed: "failed",
   branches_region_other: "Other",
+  branches_find: "Find other branches",
+  branches_none: "No other branches found",
+  branches_error: "Couldn't look up branches — try again",
 
   // Recommendation
   query_placeholder: 'What are you feeling? (e.g. "something cozy for tonight")',
@@ -257,6 +260,9 @@ export const zhTW: Record<keyof typeof en, string> = {
   branches_already_saved: "已儲存",
   branches_failed: "失敗",
   branches_region_other: "其他",
+  branches_find: "搜尋其他分店",
+  branches_none: "找不到其他分店",
+  branches_error: "無法搜尋分店，請重試",
 
   // Recommendation
   query_placeholder: "想吃什麼？（例如：今晚想吃暖胃的東西）",
