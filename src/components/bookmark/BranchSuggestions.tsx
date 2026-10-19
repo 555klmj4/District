@@ -33,7 +33,9 @@ export function BranchSuggestions({ restaurantId, restaurantName, onDone, onEmpt
 
   const branches = trpc.ingestion.findBranches.useQuery(
     { restaurantId },
-    { retry: false, refetchOnWindowFocus: false }
+    // Always ask the server: a cached or persisted empty result would close
+    // the dialog before a fresh search could return branches.
+    { retry: false, refetchOnWindowFocus: false, staleTime: 0, gcTime: 0 }
   );
 
   const finish = () => {
@@ -42,11 +44,13 @@ export function BranchSuggestions({ restaurantId, restaurantName, onDone, onEmpt
     onDone();
   };
 
-  const emptyReason = branches.isError
-    ? "error"
-    : branches.isSuccess && branches.data.length === 0
-      ? "none"
-      : null;
+  const emptyReason = !branches.isFetchedAfterMount
+    ? null
+    : branches.isError
+      ? "error"
+      : branches.isSuccess && branches.data.length === 0
+        ? "none"
+        : null;
   useEffect(() => {
     if (emptyReason && !doneRef.current) {
       doneRef.current = true;

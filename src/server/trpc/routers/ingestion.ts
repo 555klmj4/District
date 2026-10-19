@@ -99,6 +99,13 @@ export const ingestionRouter = router({
           isSameBrand({ name: place.displayName.text, name_zh }, base)
         );
 
+      console.info("[findBranches]", {
+        restaurantId: input.restaurantId,
+        queries,
+        found: [...byPlaceId.values()].map((p) => p.displayName.text),
+        matched: candidates.map(({ place }) => place.displayName.text),
+      });
+
       if (candidates.length === 0) return [];
 
       const saved = await db
