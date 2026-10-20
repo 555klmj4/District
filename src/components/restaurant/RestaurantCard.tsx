@@ -2,7 +2,7 @@
 import { memo, useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MapPin, Navigation, Trash2, Star, Loader2 } from "lucide-react";
+import { MapPin, Navigation, Trash2, Pin, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { RatingBadge } from "./RatingBadge";
 import { StatusIndicator } from "./StatusIndicator";
@@ -146,7 +146,7 @@ export const RestaurantCard = memo(function RestaurantCard({ restaurant, classNa
           aria-label={is_starred ? t("unstar_restaurant") : t("star_restaurant")}
           aria-pressed={!!is_starred}
         >
-          <Star
+          <Pin
             className={cn("w-4 h-4", is_starred ? STAR_COLOR_CLASS : "text-muted-foreground/60")}
             fill={is_starred ? "currentColor" : "none"}
           />
