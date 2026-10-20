@@ -11,6 +11,7 @@ import { useSwipeGesture } from "@/client/hooks/useSwipeGesture";
 import { RestaurantMap } from "./RestaurantMap";
 import { MapRestaurantList } from "./MapRestaurantList";
 import { FilterBar, type FilterState } from "@/components/discover/FilterBar";
+import { SearchDialog, SEARCH_BUTTON_BOTTOM } from "@/components/discover/SearchDialog";
 import { GlassCircleButton } from "@/components/layout/GlassCircleButton";
 import { ImportDialog } from "@/components/bookmark/ImportDialog";
 import { districtToRegion } from "@/lib/district-zh";
@@ -235,6 +236,21 @@ export function MapView({ apiKey }: MapViewProps) {
             />
           </div>
         </div>
+      )}
+
+      {!filterPanelOpen && (
+        <SearchDialog
+          value={filters.search}
+          onSubmit={(search) => setFilters((f) => ({ ...f, search }))}
+          renderTrigger={
+            <GlassCircleButton
+              side={addLeft ? "right" : "left"}
+              active={!!filters.search}
+              aria-label={t("search_title")}
+              style={{ bottom: SEARCH_BUTTON_BOTTOM }}
+            />
+          }
+        />
       )}
 
       <GlassCircleButton

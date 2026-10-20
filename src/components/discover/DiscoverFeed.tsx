@@ -4,6 +4,7 @@ import { SlidersHorizontal, UtensilsCrossed, TriangleAlert } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton";
 import { RestaurantCard } from "@/components/restaurant/RestaurantCard";
 import { FilterBar, type FilterState } from "./FilterBar";
+import { SearchDialog, SEARCH_BUTTON_BOTTOM } from "./SearchDialog";
 import { LocationPrompt } from "./LocationPrompt";
 import { GlassCircleButton } from "@/components/layout/GlassCircleButton";
 import { ImportDialog } from "@/components/bookmark/ImportDialog";
@@ -427,6 +428,21 @@ export function DiscoverFeed() {
             />
           </div>
         </div>
+      )}
+
+      {!filterPanelOpen && (
+        <SearchDialog
+          value={filters.search}
+          onSubmit={(search) => setFilters((f) => ({ ...f, search }))}
+          renderTrigger={
+            <GlassCircleButton
+              side={addLeft ? "right" : "left"}
+              active={!!filters.search}
+              aria-label={t("search_title")}
+              style={{ bottom: SEARCH_BUTTON_BOTTOM }}
+            />
+          }
+        />
       )}
 
       <GlassCircleButton
