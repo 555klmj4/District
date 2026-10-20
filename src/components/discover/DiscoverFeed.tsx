@@ -386,6 +386,7 @@ export function DiscoverFeed() {
                       isSelected={selectedId === r.id}
                       onSelect={setSelectedId}
                       navigateOnClick
+                      showDistrict={false}
                     />
                   ))}
                 </div>
