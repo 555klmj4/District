@@ -32,9 +32,11 @@ interface RestaurantCardProps {
   isSelected?: boolean;
   onSelect?: (id: string) => void;
   navigateOnClick?: boolean;
+  // Off inside district-grouped lists, where the section header already names it.
+  showDistrict?: boolean;
 }
 
-export const RestaurantCard = memo(function RestaurantCard({ restaurant, className, isSelected, onSelect, navigateOnClick }: RestaurantCardProps) {
+export const RestaurantCard = memo(function RestaurantCard({ restaurant, className, isSelected, onSelect, navigateOnClick, showDistrict = true }: RestaurantCardProps) {
   const router = useRouter();
   const { lang, t } = useTranslation();
   const zh = lang === "zh-TW";
@@ -104,9 +106,11 @@ export const RestaurantCard = memo(function RestaurantCard({ restaurant, classNa
 
   const displayName     = bilingualName(name, name_zh);
   const displayCuisine  = (zh && hasChinese(cuisine_primary_zh)) ? cuisine_primary_zh! : cuisine_primary;
-  const displayDistrict = zh
-    ? (hasChinese(district_zh) ? district_zh! : districtZh(district) ?? district)
-    : district;
+  const displayDistrict = !showDistrict
+    ? null
+    : zh
+      ? (hasChinese(district_zh) ? district_zh! : districtZh(district) ?? district)
+      : district;
 
   return (
     <div className={cn("relative overflow-hidden group", className)}>

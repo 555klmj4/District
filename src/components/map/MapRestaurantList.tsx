@@ -67,7 +67,7 @@ export function MapRestaurantList({ restaurants, selectedId, onSelect }: MapRest
                     else itemRefs.current.delete(r.id);
                   }}
                 >
-                  <RestaurantCard restaurant={r} isSelected={selectedId === r.id} onSelect={onSelect} />
+                  <RestaurantCard restaurant={r} isSelected={selectedId === r.id} onSelect={onSelect} showDistrict={false} />
                 </div>
               ))}
             </div>
