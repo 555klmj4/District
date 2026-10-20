@@ -8,6 +8,26 @@ import {
 } from "@/shared/validators/restaurant";
 import { isOpenNow } from "@/server/geo/utils";
 import { sortColorTags } from "@/lib/colors";
+import { districtEn } from "@/lib/district-zh";
+
+// Matches English and Chinese fields; a Chinese district name also matches
+// restaurants that only have the English district stored (中環 → "Central").
+function textSearch(q: string, opts: { address?: boolean } = {}) {
+  const like = `%${q}%`;
+  const districtFromZh = districtEn(q.trim());
+  return or(
+    ilike(restaurants.name, like),
+    ilike(restaurants.name_zh, like),
+    ilike(restaurants.cuisine_primary, like),
+    ilike(restaurants.cuisine_primary_zh, like),
+    ilike(restaurants.district, like),
+    ilike(restaurants.district_zh, like),
+    ...(districtFromZh ? [eq(restaurants.district, districtFromZh)] : []),
+    ...(opts.address
+      ? [ilike(restaurants.address, like), ilike(restaurants.address_zh, like)]
+      : []),
+  )!;
+}
 
 export const restaurantsRouter = router({
   list: authedProcedure.input(RestaurantListInput).query(async ({ ctx, input }) => {
@@ -30,13 +50,7 @@ export const restaurantsRouter = router({
     const conditions = [eq(restaurants.user_id, userId)];
 
     if (search) {
-      conditions.push(
-        or(
-          ilike(restaurants.name, `%${search}%`),
-          ilike(restaurants.cuisine_primary, `%${search}%`),
-          ilike(restaurants.district, `%${search}%`)
-        )!
-      );
+      conditions.push(textSearch(search));
     }
 
     if (cuisine) {
@@ -317,12 +331,7 @@ export const restaurantsRouter = router({
 
       const conditions = [
         eq(restaurants.user_id, userId),
-        or(
-          ilike(restaurants.name, `%${query}%`),
-          ilike(restaurants.cuisine_primary, `%${query}%`),
-          ilike(restaurants.district, `%${query}%`),
-          ilike(restaurants.address, `%${query}%`)
-        )!,
+        textSearch(query, { address: true }),
       ];
 
       // Only what the search-preview dropdown (FilterBar.tsx) actually
