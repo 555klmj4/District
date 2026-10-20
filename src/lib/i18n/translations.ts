@@ -150,16 +150,16 @@ export const en = {
   history_verb_removed: "Removed",
   history_verb_color_added: "Added color tag to",
   history_verb_color_removed: "Removed color tag from",
-  history_verb_starred: "Starred",
-  history_verb_unstarred: "Unstarred",
+  history_verb_starred: "Pinned",
+  history_verb_unstarred: "Unpinned",
   history_load_more: "Load more",
 
-  // Starred
-  starred_section_title: "Starred",
-  star_restaurant: "Star restaurant",
-  unstar_restaurant: "Unstar restaurant",
-  star_added_toast: "Added to Starred",
-  star_removed_toast: "Removed from Starred",
+  // Pinned (stored as "stars")
+  starred_section_title: "Pinned",
+  star_restaurant: "Pin restaurant",
+  unstar_restaurant: "Unpin restaurant",
+  star_added_toast: "Pinned",
+  star_removed_toast: "Unpinned",
 } as const;
 
 export const zhTW: Record<keyof typeof en, string> = {
@@ -314,14 +314,14 @@ export const zhTW: Record<keyof typeof en, string> = {
   history_verb_removed: "刪除了",
   history_verb_color_added: "新增顏色標籤於",
   history_verb_color_removed: "移除顏色標籤於",
-  history_verb_starred: "加了星號",
-  history_verb_unstarred: "移除了星號",
+  history_verb_starred: "釘選了",
+  history_verb_unstarred: "取消釘選了",
   history_load_more: "載入更多",
 
-  // Starred
-  starred_section_title: "已加星號",
-  star_restaurant: "加星號",
-  unstar_restaurant: "移除星號",
-  star_added_toast: "已加入星號",
-  star_removed_toast: "已移除星號",
+  // Pinned (stored as "stars")
+  starred_section_title: "已釘選",
+  star_restaurant: "釘選",
+  unstar_restaurant: "取消釘選",
+  star_added_toast: "已釘選",
+  star_removed_toast: "已取消釘選",
 };

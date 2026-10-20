@@ -176,7 +176,7 @@ export function DiscoverFeed() {
   const [pinnedCount, setPinnedCount] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  // Permanent, always-visible Starred bar — sits above the district pinned bar,
+  // Permanent, always-visible pinned-restaurants bar — sits above the district bar,
   // which needs to know its height to stack itself (and its pin-math) below it.
   // Tracked via ResizeObserver (not a plain ref callback) since the panel's
   // content — and therefore height — can change while it stays mounted (e.g.
@@ -271,7 +271,7 @@ export function DiscoverFeed() {
         </div>
       )}
 
-      {/* Starred bar — permanent, always visible below the top header, not scroll-triggered */}
+      {/* Pinned-restaurants bar — permanent, always visible below the top header, not scroll-triggered */}
       {starredRestaurants.length > 0 && (
         <div
           ref={starredBarElRef}
@@ -304,7 +304,7 @@ export function DiscoverFeed() {
         </div>
       )}
 
-      {/* Pinned district bar — fixed below the top header + Starred bar */}
+      {/* Pinned district bar — fixed below the top header + pinned-restaurants bar */}
       {pinnedCount > 0 && (() => {
         const start = Math.max(0, pinnedCount - MAX_PINNED_HEADERS);
         const sliced = groupedRestaurants.slice(start, pinnedCount);
