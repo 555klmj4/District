@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { useTranslation } from "@/lib/i18n";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { cn } from "@/lib/utils";
-import { STAR_COLOR_CLASS } from "@/lib/colors";
+import { STAR_COLOR_CLASS, TAG_COLORS, sortColorTags, type TagColor } from "@/lib/colors";
 import { bilingualName } from "@/lib/restaurant-name";
 import { BranchSuggestions } from "./BranchSuggestions";
 
@@ -38,6 +38,7 @@ export function ImportDialog({ renderTrigger, iconOnly }: ImportDialogProps = {}
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
   const [branchesFor, setBranchesFor] = useState<{ id: string; name: string } | null>(null);
+  const [colors, setColors] = useState<TagColor[]>([]);
   const { t } = useTranslation();
 
   const utils = trpc.useUtils();
@@ -53,6 +54,7 @@ export function ImportDialog({ renderTrigger, iconOnly }: ImportDialogProps = {}
     setSearchQuery("");
     setSelectedPlaceId(null);
     setBranchesFor(null);
+    setColors([]);
     setOpen(false);
     // Defer the list refetch/re-render to its own tick so it can't block the
     // browser from painting the dialog-closed state in the same frame — on a
@@ -80,13 +82,13 @@ export function ImportDialog({ renderTrigger, iconOnly }: ImportDialogProps = {}
 
   const handleImport = () => {
     if (!url.trim()) return;
-    importMutation.mutate({ url: url.trim() });
+    importMutation.mutate({ url: url.trim(), colors });
   };
 
   const handleSelectResult = (placeId: string) => {
     if (importByPlaceIdMutation.isPending) return;
     setSelectedPlaceId(placeId);
-    importByPlaceIdMutation.mutate({ placeId });
+    importByPlaceIdMutation.mutate({ placeId, colors });
   };
 
   const debouncedQuery = useDebouncedValue(searchQuery, 350);
@@ -107,6 +109,7 @@ export function ImportDialog({ renderTrigger, iconOnly }: ImportDialogProps = {}
           setUrl("");
           setSearchQuery("");
           setSelectedPlaceId(null);
+          setColors([]);
           if (branchesFor) {
             setBranchesFor(null);
             setTimeout(() => {
@@ -135,6 +138,7 @@ export function ImportDialog({ renderTrigger, iconOnly }: ImportDialogProps = {}
             restaurantId={branchesFor.id}
             restaurantName={branchesFor.name}
             onDone={finish}
+            colors={colors}
           />
         ) : (
         <div className="space-y-4 pt-2">
@@ -163,6 +167,35 @@ export function ImportDialog({ renderTrigger, iconOnly }: ImportDialogProps = {}
             >
               {t("import_tab_search")}
             </button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground">{t("import_color_tags")}</span>
+            <div className="flex gap-2 items-center">
+              {TAG_COLORS.map((color) => {
+                const active = colors.includes(color.id);
+                return (
+                  <button
+                    key={color.id}
+                    type="button"
+                    onClick={() =>
+                      setColors((prev) =>
+                        sortColorTags(
+                          prev.includes(color.id) ? prev.filter((c) => c !== color.id) : [...prev, color.id]
+                        )
+                      )
+                    }
+                    className={cn(
+                      "w-5 h-5 rounded-full transition-all touch-manipulation shrink-0",
+                      active ? "ring-2 ring-white ring-offset-1 ring-offset-background" : "opacity-30 hover:opacity-70 active:opacity-90"
+                    )}
+                    style={{ backgroundColor: color.hex }}
+                    aria-label={color.id}
+                    aria-pressed={active}
+                  />
+                );
+              })}
+            </div>
           </div>
 
           {mode === "link" ? (
