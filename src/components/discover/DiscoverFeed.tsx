@@ -11,6 +11,7 @@ import { ImportDialog } from "@/components/bookmark/ImportDialog";
 import { useLocation } from "@/client/hooks/useLocation";
 import { useFilterAlignment } from "@/client/hooks/useFilterAlignment";
 import { useSwipeGesture } from "@/client/hooks/useSwipeGesture";
+import { useCloseOnScrollGesture } from "@/client/hooks/useCloseOnScrollGesture";
 import { trpc } from "@/client/trpc";
 import { useTranslation } from "@/lib/i18n";
 import { districtLabelZh, districtToRegion, REGION_COLORS } from "@/lib/district-zh";
@@ -164,6 +165,9 @@ export function DiscoverFeed() {
   }, [availableDistricts, filters.district]);
 
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const filterPanelRef = useRef<HTMLDivElement>(null);
+  const closeFilterPanel = useCallback(() => setFilterPanelOpen(false), []);
+  useCloseOnScrollGesture(filterPanelOpen, filterPanelRef, closeFilterPanel);
   const swipeGesture = useSwipeGesture(() => setAddLeft(true), () => setAddLeft(false));
   const addButtonSwipeGesture = useSwipeGesture(() => setAddLeft(false), () => setAddLeft(true));
 
@@ -415,6 +419,7 @@ export function DiscoverFeed() {
       )}
       {filterPanelOpen && (
         <div
+          ref={filterPanelRef}
           className="fixed inset-x-0 z-20 px-4"
           style={{ bottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}
         >
