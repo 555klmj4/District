@@ -2,7 +2,10 @@ import { z } from "zod";
 import { eq, and, isNull, inArray } from "drizzle-orm";
 import { router, authedProcedure, TRPCError } from "../init";
 import { restaurants, restaurantSources } from "@/server/db/schema";
-import { importUrl, importByPlaceId } from "@/server/ingestion/pipeline";
+import { importUrl, importByPlaceId, type ImportResult } from "@/server/ingestion/pipeline";
+import { addColorTags } from "@/server/colorTags";
+import type { DB } from "@/server/db";
+import { TAG_COLOR_IDS, type TagColor } from "@/lib/colors";
 import {
   fetchByPlaceId,
   searchPlacesByName,
@@ -16,14 +19,28 @@ import { generateSignatureDishes } from "@/server/ai/signatureDishes";
 import { searchOpenRiceRating } from "@/server/ingestion/openrice";
 import { sql } from "drizzle-orm";
 
+const ColorsInput = z.array(z.enum(TAG_COLOR_IDS)).max(TAG_COLOR_IDS.length).optional();
+
+async function withColors(
+  result: ImportResult,
+  db: DB,
+  userId: string,
+  colors: TagColor[] | undefined
+): Promise<ImportResult> {
+  if (colors?.length) {
+    await addColorTags(db, userId, { id: result.restaurant_id, name: result.restaurant.name }, colors);
+  }
+  return result;
+}
+
 export const ingestionRouter = router({
   importUrl: authedProcedure
-    .input(z.object({ url: z.string().url().max(2048) }))
+    .input(z.object({ url: z.string().url().max(2048), colors: ColorsInput }))
     .mutation(async ({ ctx, input }) => {
       const { userId, db } = ctx;
 
       const result = await importUrl({ url: input.url, userId, db });
-      return result;
+      return withColors(result, db, userId, input.colors);
     }),
 
   searchByName: authedProcedure
@@ -47,10 +64,11 @@ export const ingestionRouter = router({
     }),
 
   importByPlaceId: authedProcedure
-    .input(z.object({ placeId: z.string().min(1) }))
+    .input(z.object({ placeId: z.string().min(1), colors: ColorsInput }))
     .mutation(async ({ ctx, input }) => {
       const { userId, db } = ctx;
-      return await importByPlaceId({ placeId: input.placeId, userId, db });
+      const result = await importByPlaceId({ placeId: input.placeId, userId, db });
+      return withColors(result, db, userId, input.colors);
     }),
 
   findBranches: authedProcedure
@@ -130,7 +148,7 @@ export const ingestionRouter = router({
     }),
 
   importBranches: authedProcedure
-    .input(z.object({ placeIds: z.array(z.string().min(1)).min(1).max(40) }))
+    .input(z.object({ placeIds: z.array(z.string().min(1)).min(1).max(40), colors: ColorsInput }))
     .mutation(async ({ ctx, input }) => {
       const { userId, db } = ctx;
       const placeIds = [...new Set(input.placeIds)];
@@ -145,7 +163,9 @@ export const ingestionRouter = router({
         const results = await Promise.allSettled(
           placeIds
             .slice(i, i + 5)
-            .map((placeId) => importByPlaceId({ placeId, userId, db }))
+            .map(async (placeId) =>
+              withColors(await importByPlaceId({ placeId, userId, db }), db, userId, input.colors)
+            )
         );
         for (const r of results) {
           if (r.status === "rejected") {

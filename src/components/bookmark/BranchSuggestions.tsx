@@ -8,6 +8,7 @@ import { trpc } from "@/client/trpc";
 import { useTranslation } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { bilingualName } from "@/lib/restaurant-name";
+import type { TagColor } from "@/lib/colors";
 import {
   REGIONS,
   REGION_COLORS,
@@ -23,9 +24,11 @@ interface BranchSuggestionsProps {
   onDone: () => void;
   // Called instead of onDone when there is nothing to show; defaults to onDone.
   onEmpty?: (reason: "none" | "error") => void;
+  // Colour tags to give each branch added from here.
+  colors?: TagColor[];
 }
 
-export function BranchSuggestions({ restaurantId, restaurantName, onDone, onEmpty }: BranchSuggestionsProps) {
+export function BranchSuggestions({ restaurantId, restaurantName, onDone, onEmpty, colors }: BranchSuggestionsProps) {
   const { lang, t } = useTranslation();
   const zh = lang === "zh-TW";
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -191,7 +194,7 @@ export function BranchSuggestions({ restaurantId, restaurantName, onDone, onEmpt
           {t("branches_skip")}
         </Button>
         <Button
-          onClick={() => importBranches.mutate({ placeIds: [...selected] })}
+          onClick={() => importBranches.mutate({ placeIds: [...selected], colors })}
           disabled={selected.size === 0 || isPending}
         >
           {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
