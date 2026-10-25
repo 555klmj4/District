@@ -8,6 +8,7 @@ import { useTranslation } from "@/lib/i18n";
 import { useLocation } from "@/client/hooks/useLocation";
 import { useFilterAlignment } from "@/client/hooks/useFilterAlignment";
 import { useSwipeGesture } from "@/client/hooks/useSwipeGesture";
+import { useCloseOnScrollGesture } from "@/client/hooks/useCloseOnScrollGesture";
 import { RestaurantMap } from "./RestaurantMap";
 import { MapRestaurantList } from "./MapRestaurantList";
 import { FilterBar, type FilterState } from "@/components/discover/FilterBar";
@@ -37,6 +38,9 @@ export function MapView({ apiKey }: MapViewProps) {
   const [focusRequest, setFocusRequest] = useState<{ target: { lat: number; lng: number }; token: number } | null>(null);
   const focusTokenRef = useRef(0);
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const filterPanelRef = useRef<HTMLDivElement>(null);
+  const closeFilterPanel = useCallback(() => setFilterPanelOpen(false), []);
+  useCloseOnScrollGesture(filterPanelOpen, filterPanelRef, closeFilterPanel);
   const swipeGesture = useSwipeGesture(() => setAddLeft(true), () => setAddLeft(false));
   const addButtonSwipeGesture = useSwipeGesture(() => setAddLeft(false), () => setAddLeft(true));
   const [filters, setFilters] = useState<FilterState>(
@@ -222,6 +226,7 @@ export function MapView({ apiKey }: MapViewProps) {
       )}
       {filterPanelOpen && (
         <div
+          ref={filterPanelRef}
           className="fixed inset-x-0 z-20 px-4"
           style={{ bottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}
         >
